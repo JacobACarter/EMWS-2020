@@ -172,8 +172,11 @@ class Structure:
             except:
                 return self.name + ': ' + str(self.length)
 
+        def getLength(self):
+            return self.length
+
     # Instance variables for each Structure object
-    def __init__(self, num, omega, k1, k2):
+    def __init__(self, num, omega, k1, k2, startI):
         if (DEBUG):
             print('Instanciating Structure')
         self.num = num
@@ -184,6 +187,7 @@ class Structure:
         self.k2 = k2/self.kap
         self.layers = []
         self.transferMatrices = []
+        self.startingIndex = startI
 
     def printLayers(self):
         print('\nLAYERS: ')
@@ -324,9 +328,11 @@ class Structure:
 
     def interfaces(self):
         interfaces = []
-        interfaces.append(-self.layers[0].length)
+        print("Interface")
+        #print(-self.layers[0].getLength())
+        interfaces.append(self.startingIndex)
         for i in range(self.num):
-            interfaces.append(interfaces[i] + self.layers[i].length)
+            interfaces.append(interfaces[i] + self.layers[i].getLength())
         return interfaces
 
 
@@ -493,6 +499,7 @@ class Structure:
         return fieldVec
     
     def determineField(self, e, ee, u, uu, k1, k2, num_points=400):
+            print("Determine Field:")
             self.k1 = k1
             self.k2 = k2
             self.ee = ee
@@ -517,7 +524,7 @@ class Structure:
             # Calculate the reference points
             for i in range(num_layers):
                 # The first layer reference point is the right endpoint
-                if i < 2:
+                if i == 0:
                     references[i] = 0
                 # Calculate the rest of the reference points, the left endpoint
                 else:
@@ -541,17 +548,19 @@ class Structure:
                     print(current_c)
 
                 for i in range(num_points):
-                    z_arr.append((z_ends[layer] + i * length) / num_points)
-                    print('z', z_arr)
+                    z = z_ends[layer] + i*length/ num_points
+                    z_arr.append(z)
+
                     piScalar = np.pi * 0.4
 
-                    # scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
-                    # scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
-                    # expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - references[layer]))))
-                    # expMat = np.matmul(scalarMat, expDiag)
-                    # fieldVec = np.matmul(expMat, current_c)
-                    # field0 = np.transpose(fieldVec)
-                    # print(field0)
+                    scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
+                    scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
+                    expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - references[layer]))))
+                    expMat = np.matmul(scalarMat, expDiag)
+                    fieldVec = np.matmul(expMat, current_c)
+                    field0 = np.transpose(fieldVec)
+                    #print(field0)
+            print(z_arr)
 
                     # e1 = field0[0:3]
                     # e2 = field0[1::3]
@@ -629,7 +638,7 @@ def test():
     omega = 0.398
     k1 = 0.5
     k2 = 0.22
-    s = Structure(size, omega, k1, k2)
+    s = Structure(size, omega, k1, k2, -15)
     e = np.array([[1.5,0,0],
                 [0,8,0],
                 [0,0,1]])
@@ -642,9 +651,10 @@ def test():
     uu = np.array([[1,0,0],
                 [0,4,0],
                 [0,0,1]])
-    s.addLayer('Ambient Left', 10, e, u)
+    s.addLayer('Ambient Left', 15, e, u)
     s.addLayer('Layer 1', 7, e, u)
-    s.addLayer('Ambient Right', 10, e, u)
+    s.addLayer('Layer 2', 15, e, u)
+    #s.addLayer('Ambient Right', 7, e, u)
     s.printLayers()
     s.removeLayer(1)
     s.printLayers()
