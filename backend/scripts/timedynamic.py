@@ -172,6 +172,15 @@ class Structure:
             except:
                 return self.name + ': ' + str(self.length)
 
+        def getEigVal(self):
+            return self.eigVal
+        
+        def getEps(self):
+            return self.epsilon
+
+        def getMu(self):
+            return self.mu
+
         def getLength(self):
             return self.length
 
@@ -552,15 +561,15 @@ class Structure:
                     z_arr.append(z)
 
                     piScalar = np.pi * 0.4
-
                     scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
                     scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
                     expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - references[layer]))))
                     expMat = np.matmul(scalarMat, expDiag)
                     fieldVec = np.matmul(expMat, current_c)
                     field0 = np.transpose(fieldVec)
-                    #print(field0)
-            print(z_arr)
+                print("ScalarMat")
+                print(scalarMat)
+            #print(z_arr)
 
                     # e1 = field0[0:3]
                     # e2 = field0[1::3]
