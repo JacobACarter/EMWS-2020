@@ -155,7 +155,7 @@ class Structure:
     # Sub class for defining each layer
     class Layer:
         # Instance variables for each Layer object
-        def __init__(self, name, length, epsilon, mu):
+        def __init__(self, name, length, epsilon, mu, vvo, ee):
             if (DEBUG):
                 print('     Instanciating Layer')
             self.name = name
@@ -165,6 +165,8 @@ class Structure:
             self.solution = np.zeros(4, dtype=complex)
             self.eigVec = [np.zeros((4,1), dtype=complex)] * 4
             self.eigVal = [np.zeros(4)]
+            self.vvo = vvo
+            self.ee = ee
 
         def __str__(self):
             try:
@@ -209,17 +211,17 @@ class Structure:
         self.layers.pop(n)
 
     # Method for adding a layer to the structure
-    def addLayer(self, name, length, epsilon, mu):
+    def addLayer(self, name, length, epsilon, mu, vvo, ee):
         if (DEBUG):
             print('Adding Layer')
-        l = self.Layer(name, length, epsilon, mu)
+        l = self.Layer(name, length, epsilon, mu, vvo, ee)
         self.layers.append(l)
 
     # Method for inserting a layer into given index n
-    def insertLayer(self, name, length, epsilon, mu, n):
+    def insertLayer(self, name, length, epsilon, mu, n, vvo, ee):
         if (DEBUG):
             print('Inserting Layer')
-        l = self.Layer(name, length, epsilon, mu)
+        l = self.Layer(name, length, epsilon, mu, vvo, ee)
         self.layers.insert(n, l)
 
     # Create the maxwell matrices
@@ -537,7 +539,7 @@ class Structure:
                     references[i] = 0
                 # Calculate the rest of the reference points, the left endpoint
                 else:
-                    references[i] = (z_ends[i] - z_ends[i-1])
+                    references[i] = z_ends[i]
             # Calculate the locations (z-values) of the interfaces
             for i in range(num_layers-1):
                 # First interface is always at 0
@@ -556,19 +558,22 @@ class Structure:
                     print("Constant vector at layer " + str(layer))
                     print(current_c)
 
+                piScalar = np.pi * 0.4
+                scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
+                scalarMat = np.multiply(scalar, self.layers[layer].vvo)
+                
                 for i in range(num_points):
                     z = z_ends[layer] + i*length/ num_points
                     z_arr.append(z)
+                    expDiag = np.diag(np.exp(np.multiply((z - references[layer]), self.layers[layer].ee)))
+                    expMat = np.dot(scalarMat, expDiag)
 
-                    piScalar = np.pi * 0.4
-                    scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
-                    scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
-                    expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - references[layer]))))
-                    expMat = np.matmul(scalarMat, expDiag)
                     fieldVec = np.matmul(expMat, current_c)
-                    field0 = np.transpose(fieldVec)
-                print("ScalarMat")
-                print(scalarMat)
+                    f = open("output.txt", "a")
+                    print(z, file = f)
+                    print(fieldVec, file = f)
+                    #field0 = np.transpose(fieldVec)
+
             #print(z_arr)
 
                     # e1 = field0[0:3]
@@ -579,25 +584,26 @@ class Structure:
                     
             
 
-                    # z_arr.append(z)
-                    # Ex.append(fieldVec.item(0).real)
-                    # Ey.append(fieldVec.item(1).real)
-                    # Hx.append(fieldVec.item(2).real)
-                    # Hy.append(fieldVec.item(3).real)
+                    z_arr.append(z)
+                    Ex.append(fieldVec.item(0).real)
+                    Ey.append(fieldVec.item(1).real)
+                    Hx.append(fieldVec.item(2).real)
+                    Hy.append(fieldVec.item(3).real)
                     # e3.append(e3mock.real)
                     # h3.append(h3mock.real)
 
 
-                    # field = {
-                    #     'z': z_arr,
-                    #     'Ex': Ex,
-                    #     'Ey': Ey,
-                    #     'Hx': Hx,
-                    #     'Hy': Hy,
-                    #     'e3': e3, 
-                    #     'h3': h3
-                    # }
-                    # print(field['e3'])
+                    field = {
+                        'z': z_arr,
+                        'Ex': Ex,
+                        'Ey': Ey,
+                        'Hx': Hx,
+                        'Hy': Hy,
+                        #'e3': e3, 
+                        #'h3': h3
+                    }
+
+
 
 
 
@@ -660,14 +666,18 @@ def test():
     uu = np.array([[1,0,0],
                 [0,4,0],
                 [0,0,1]])
-    s.addLayer('Ambient Left', 15, e, u)
-    s.addLayer('Layer 1', 7, e, u)
-    s.addLayer('Layer 2', 15, e, u)
+
+    vvo1 = np.array([vv11, vv12, vv13, vv14])
+    vvo2 = np.array([vv21, vv22, vv23, vv24])
+    vvo3 = np.array([vv11, vv12, vv13, vv14])
+    s.addLayer('Ambient Left', 15, e, u, vvo1, ee1)
+    s.addLayer('Layer 1', 7, e, u, vvo2, ee2)
+    s.addLayer('Layer 2', 15, e, u, vvo3, ee1)
     #s.addLayer('Ambient Right', 7, e, u)
     s.printLayers()
     s.removeLayer(1)
     s.printLayers()
-    s.insertLayer('Layer 1', 7, ee, uu, 1)
+    s.insertLayer('Layer 1', 7, ee, uu, 1, vvo2, ee2)
     s.printLayers()
     m = s.buildMatrices()
     print('Number of Layers: ' + str(len(m)))
@@ -678,8 +688,8 @@ def test():
     s.printMaxwell()
     s.calcEig()
     s.calcModes()
-    c1 = 1
-    c2 = 0
+    c1 = 0
+    c2 = 1
     c3 = 0
     c4 = 0
     s.calcConstants(c1,c2,c3,c4)
