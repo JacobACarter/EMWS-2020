@@ -155,7 +155,7 @@ class Structure:
     # Sub class for defining each layer
     class Layer:
         # Instance variables for each Layer object
-        def __init__(self, name, length, epsilon, mu, vvo, ee):
+        def __init__(self, name, length, epsilon, mu, vvo, ee, c):
             if (DEBUG):
                 print('     Instanciating Layer')
             self.name = name
@@ -167,6 +167,7 @@ class Structure:
             self.eigVal = [np.zeros(4)]
             self.vvo = vvo
             self.ee = ee
+            self.constants = c
 
         def __str__(self):
             try:
@@ -211,17 +212,17 @@ class Structure:
         self.layers.pop(n)
 
     # Method for adding a layer to the structure
-    def addLayer(self, name, length, epsilon, mu, vvo, ee):
+    def addLayer(self, name, length, epsilon, mu, vvo, ee, c):
         if (DEBUG):
             print('Adding Layer')
-        l = self.Layer(name, length, epsilon, mu, vvo, ee)
+        l = self.Layer(name, length, epsilon, mu, vvo, ee, c)
         self.layers.append(l)
 
     # Method for inserting a layer into given index n
-    def insertLayer(self, name, length, epsilon, mu, n, vvo, ee):
+    def insertLayer(self, name, length, epsilon, mu, n, vvo, ee, c):
         if (DEBUG):
             print('Inserting Layer')
-        l = self.Layer(name, length, epsilon, mu, vvo, ee)
+        l = self.Layer(name, length, epsilon, mu, vvo, ee, c)
         self.layers.insert(n, l)
 
     # Create the maxwell matrices
@@ -568,15 +569,13 @@ class Structure:
                     expDiag = np.diag(np.exp(np.multiply((z - references[layer]), self.layers[layer].ee)))
                     expMat = np.dot(scalarMat, expDiag)
 
-                    fieldVec = np.matmul(expMat, current_c)
-                    f = open("output.txt", "a")
-                    print(z, file = f)
-                    print(fieldVec, file = f)
+                    fieldVec = np.dot(expMat, self.layers[layer].constants)
+                    print(self.layers[layer].constants)
                     #field0 = np.transpose(fieldVec)
 
             #print(z_arr)
 
-                    # e1 = field0[0:3]
+                    # e1 = fieldVec[0:3]
                     # e2 = field0[1::3]
 
                     # e3mock = np.array(-((ep[layer, 2, 0] * e1 + (ep[layer,2,1] * e2 - k2 * h1 + k1 * h2 / (ep[layer, 2, 2])))))
@@ -602,6 +601,9 @@ class Structure:
                         #'e3': e3, 
                         #'h3': h3
                     }
+                    f = open("output.txt", "a")
+                    print(z, file = f)
+                    print(field["Ex"], file = f)
 
 
 
@@ -670,14 +672,18 @@ def test():
     vvo1 = np.array([vv11, vv12, vv13, vv14])
     vvo2 = np.array([vv21, vv22, vv23, vv24])
     vvo3 = np.array([vv11, vv12, vv13, vv14])
-    s.addLayer('Ambient Left', 15, e, u, vvo1, ee1)
-    s.addLayer('Layer 1', 7, e, u, vvo2, ee2)
-    s.addLayer('Layer 2', 15, e, u, vvo3, ee1)
+
+    cc1 = np.array([complex(1.0, 0.0), complex(0, 0), complex(-.43674, 0.643602), complex(.0492448, -.056299)])
+    cc2 = np.array([complex(-.164197,-.0712676), complex(-.709687, -1.02698), complex(.104261, -.0952632), complex(-.27917, -.0752636)])
+    cc3 = np.array([complex(.520079,.352919), complex(.0842069, .179057), complex(0,0), complex(0,0)])
+    s.addLayer('Ambient Left', 15, e, u, vvo1, ee1, cc1)
+    s.addLayer('Layer 1', 7, e, u, vvo2, ee2, cc2)
+    s.addLayer('Layer 2', 15, e, u, vvo3, ee1, cc3)
     #s.addLayer('Ambient Right', 7, e, u)
     s.printLayers()
     s.removeLayer(1)
     s.printLayers()
-    s.insertLayer('Layer 1', 7, ee, uu, 1, vvo2, ee2)
+    s.insertLayer('Layer 1', 7, ee, uu, 1, vvo2, ee2, cc2)
     s.printLayers()
     m = s.buildMatrices()
     print('Number of Layers: ' + str(len(m)))
