@@ -510,16 +510,13 @@ class Structure:
         fieldVec = np.matmul(expMat, current_c)
         return fieldVec
     
-    def determineField(self, e, ee, u, uu, k1, k2, num_points=400):
+    def determineField(self, omega, k1, k2, num_points=400):
             print("Determine Field:")
+            self.omega = omega 
             self.k1 = k1
             self.k2 = k2
-            self.ee = ee
-            self.e = e
-            ep = np.row_stack(([e], [ee], [e]))
-            self.u = u 
-            self.uu = uu
-            mu = np.row_stack(([u], [uu], [u]))
+            kap1 = self.k1/self.omega
+            kap2 = self.k2/self.omega
             num_layers = self.num
             z_ends = self.interfaces()              # zzz
             interfaces = [0] * (self.num - 1)       # zz
@@ -531,7 +528,7 @@ class Structure:
             Hy = []
             e3 = []
             h3 = []
-             
+            
 
             # Calculate the reference points
             for i in range(num_layers):
@@ -551,6 +548,7 @@ class Structure:
                     interfaces[i] = z_ends[i+1]
 
             for layer in range(num_layers):
+            
                 length = z_ends[layer+1] - z_ends[layer]
 
                 current_c = self.constants[layer*4:4+(layer*4)]
@@ -558,7 +556,8 @@ class Structure:
                 if (DEBUG):
                     print("Constant vector at layer " + str(layer))
                     print(current_c)
-
+                e = self.layers[layer].epsilon
+                u = self.layers[layer].mu
                 piScalar = np.pi * 0.4
                 scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
                 scalarMat = np.multiply(scalar, self.layers[layer].vvo)
@@ -571,16 +570,8 @@ class Structure:
 
                     fieldVec = np.dot(expMat, self.layers[layer].constants)
                     print(self.layers[layer].constants)
-                    #field0 = np.transpose(fieldVec)
 
-            #print(z_arr)
 
-                    # e1 = fieldVec[0:3]
-                    # e2 = field0[1::3]
-
-                    # e3mock = np.array(-((ep[layer, 2, 0] * e1 + (ep[layer,2,1] * e2 - k2 * h1 + k1 * h2 / (ep[layer, 2, 2])))))
-                    # h3mock = np.array(- (k2 * e1 - k1 * e2 + (mu[layer, 2, 0] * h1) + (mu[layer, 2, 1] * h2 / (mu[layer, 2, 2]))))
-                    
             
 
                     z_arr.append(z)
@@ -588,8 +579,12 @@ class Structure:
                     Ey.append(fieldVec.item(1).real)
                     Hx.append(fieldVec.item(2).real)
                     Hy.append(fieldVec.item(3).real)
-                    # e3.append(e3mock.real)
-                    # h3.append(h3mock.real)
+
+
+
+                    e3.append(-(e[2, 0] * fieldVec[0::4].real + e[2,1] * fieldVec[1::4].real - kap2 * fieldVec[2::4].real + kap1 * fieldVec[3::4].real) / (e[2, 2]))
+                    h3.append(- (kap2 * fieldVec[0::4].real - kap1 * fieldVec[1::4].real + u[2, 0] * fieldVec[2::4].real + u[2, 1] * fieldVec[3::4].real) / (u[2, 2]))
+
 
 
                     field = {
@@ -598,55 +593,9 @@ class Structure:
                         'Ey': Ey,
                         'Hx': Hx,
                         'Hy': Hy,
-                        #'e3': e3, 
-                        #'h3': h3
+                        'e3': e3, 
+                        'h3': h3
                     }
-                    f = open("output.txt", "a")
-                    print(z, file = f)
-                    print(field["Ex"], file = f)
-
-
-
-
-
-    # Calculate the modes. Result will not contain constant multiplication
-    # def calcFields(self, e, ee, u, uu, k1, k2, npoints=400):
-    #     if (DEBUG):
-    # #         print('\nCalculating Fields')
-    #     self.ee = ee
-    #     self.e = e
-    #     ep = np.row_stack(([e], [ee], [e]))
-    #     self.u = u 
-    #     self.uu = uu
-    #     mu = np.row_stack(([u], [uu], [u]))
-    #     z_ends = self.interfaces()   
-    #     num_layers = self.num
-    #     for layer in range(num_layers):
-    #         self.k1 = k1
-    #         self.k2 = k2
-    #         current_c = self.constants[layer*4:4+(layer*4)]
-    #         references = np.zeros(num_layers)  
-    #         if layer < 2:
-    #             references[layer] = 0
-    #         # Calculate the rest of the reference points, the left endpoint
-    #         else:
-    #             references[layer] = (z_ends[layer] - z_ends[layer-1])
-    #         for i in range(npoints):
-    #             length = z_ends[layer+1] - z_ends[layer]
-    #             z = z_ends[layer] + i * length / npoints
-    #             print("zzzzz", z)
-    #                 piScalar = np.pi * 0.4
-    #                 scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
-    #                 scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
-    #                 expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - references[layer]))))
-    #                 expMat = np.matmul(scalarMat, expDiag)
-    #                 fieldVec = np.matmul(expMat, current_c)
-    #                 field0 = np.transpose(fieldVec)[:4]
-    #                 e3 = -(((ep[layer, 2, 0] * field0[[0]])+ (ep[layer,2,1] * field0[[1]]) - k2 * field0[[2]] + k1 * field0[[3]]) / (ep[layer, 2, 2]))
-    #                 h3 = - ((k2 * field0[[0]] - k1 * field0 [[1]] + (mu[layer, 2, 0] * field0[[2]]) + (mu[layer, 2, 1] * field0[[3]])) / (mu[layer, 2, 2]))
-    #                 print('first e', z, e3[[0]])
-    #                 print('first h', z, h3[[0]])
-         
 
 
 def test():
@@ -699,7 +648,7 @@ def test():
     c3 = 0
     c4 = 0
     s.calcConstants(c1,c2,c3,c4)
-    s.determineField(e, ee, u, uu, k1, k2)
+    s.determineField(omega, k1, k2)
 #    s.calcFields(e, ee, u, uu, k1, k2)
 #    s.fields(e, ee, u, uu)
 
