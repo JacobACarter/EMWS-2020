@@ -155,7 +155,7 @@ class Structure:
     # Sub class for defining each layer
     class Layer:
         # Instance variables for each Layer object
-        def __init__(self, name, length, epsilon, mu, vvo, ee, c):
+        def __init__(self, name, length, epsilon, mu):
             if (DEBUG):
                 print('     Instanciating Layer')
             self.name = name
@@ -168,6 +168,8 @@ class Structure:
             self.vvo = vvo
             self.ee = ee
             self.constants = c
+            #test method
+            loadDefaults(self)
 
         def __str__(self):
             try:
@@ -186,6 +188,20 @@ class Structure:
 
         def getLength(self):
             return self.length
+
+        def loadDefaults(self):
+            if self.name == "Ambient Left":
+                self.vvo = vvo1
+                self.ee = ee1
+                self.cc = cc1
+            elif self.name == "Layer 1":
+                self.vvo = vvo2
+                self.ee = ee2
+                self.cc = cc2
+            elif self.name == "Ambient Right":
+                self.vvo = vvo3
+                self.ee = ee3
+                self.cc = cc3
 
     # Instance variables for each Structure object
     def __init__(self, num, omega, k1, k2, startI):
@@ -212,10 +228,10 @@ class Structure:
         self.layers.pop(n)
 
     # Method for adding a layer to the structure
-    def addLayer(self, name, length, epsilon, mu, vvo, ee, c):
+    def addLayer(self, name, length, epsilon, mu:
         if (DEBUG):
             print('Adding Layer')
-        l = self.Layer(name, length, epsilon, mu, vvo, ee, c)
+        l = self.Layer(name, length, epsilon, mu)
         self.layers.append(l)
 
     # Method for inserting a layer into given index n
