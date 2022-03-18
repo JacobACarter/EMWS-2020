@@ -27,6 +27,14 @@ ee2 = np.array([complex(0.0, 1.67391), complex(-0.107923, 0.0), complex(0.0, -1.
 
 mEE = [ee1, ee2, ee1]
 
+vvo1 = np.array([vv11, vv12, vv13, vv14])
+vvo2 = np.array([vv21, vv22, vv23, vv24])
+vvo3 = np.array([vv11, vv12, vv13, vv14])
+
+cc1 = np.array([complex(1.0, 0.0), complex(0, 0), complex(-.43674, 0.643602), complex(.0492448, -.056299)])
+cc2 = np.array([complex(-.164197,-.0712676), complex(-.709687, -1.02698), complex(.104261, -.0952632), complex(-.27917, -.0752636)])
+cc3 = np.array([complex(.520079,.352919), complex(.0842069, .179057), complex(0,0), complex(0,0)])
+
 def calcFactors(pyV, pyVals):
     print('Factors:')
     ratios = []
@@ -634,13 +642,7 @@ def test():
                 [0,4,0],
                 [0,0,1]])
 
-    vvo1 = np.array([vv11, vv12, vv13, vv14])
-    vvo2 = np.array([vv21, vv22, vv23, vv24])
-    vvo3 = np.array([vv11, vv12, vv13, vv14])
 
-    cc1 = np.array([complex(1.0, 0.0), complex(0, 0), complex(-.43674, 0.643602), complex(.0492448, -.056299)])
-    cc2 = np.array([complex(-.164197,-.0712676), complex(-.709687, -1.02698), complex(.104261, -.0952632), complex(-.27917, -.0752636)])
-    cc3 = np.array([complex(.520079,.352919), complex(.0842069, .179057), complex(0,0), complex(0,0)])
     s.addLayer('Ambient Left', 15, e, u, vvo1, ee1, cc1)
     s.addLayer('Layer 1', 7, e, u, vvo2, ee2, cc2)
     s.addLayer('Layer 2', 15, e, u, vvo3, ee1, cc3)
