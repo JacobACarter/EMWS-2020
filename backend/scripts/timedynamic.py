@@ -5,7 +5,7 @@ from numpy.linalg import eig
 from scipy.linalg import solve
 import json
 
-DEBUG = True
+DEBUG = False
 
 # Values are for default struct with [0, 1, 0, 0] incoming coefficients
 vv11 = np.array([complex(0.0, -0.121293), complex(-0.61281, 0.0), complex(0.0, 0.121293), complex(0.61281, 0.0)], dtype=complex) # np.array([complex(-0.121293, 5.97957*(10**-18)), complex(0.121293, 2.89059*(10**-17)), complex(5.33339*(10**-16), -0.61281), complex(4.43682*(10**-17), 0.61281)], dtype=complex)
@@ -157,6 +157,24 @@ def organizeEigenForMiddleLayers(val, vec):
 
     return val, vec
 
+#Temporary Method to Hard Code In Values
+
+def loadDefaults(self):
+    if self.name == "Ambient Left":
+        self.vvo = vvo1
+        self.ee = ee1
+        self.constants = cc1
+    elif self.name == "Layer 1":
+        self.vvo = vvo2
+        self.ee = ee2
+        self.constants = cc2
+    elif self.name == "Ambient Right":
+        self.vvo = vvo3
+        self.ee = ee1
+        self.constants = cc3
+    else:
+        print("didn't load correctly")
+
 
 # Classes for storing structure data
 class Structure:
@@ -173,9 +191,6 @@ class Structure:
             self.solution = np.zeros(4, dtype=complex)
             self.eigVec = [np.zeros((4,1), dtype=complex)] * 4
             self.eigVal = [np.zeros(4)]
-            self.vvo = vvo
-            self.ee = ee
-            self.constants = c
             #test method
             loadDefaults(self)
 
@@ -197,22 +212,10 @@ class Structure:
         def getLength(self):
             return self.length
 
-        def loadDefaults(self):
-            if self.name == "Ambient Left":
-                self.vvo = vvo1
-                self.ee = ee1
-                self.cc = cc1
-            elif self.name == "Layer 1":
-                self.vvo = vvo2
-                self.ee = ee2
-                self.cc = cc2
-            elif self.name == "Ambient Right":
-                self.vvo = vvo3
-                self.ee = ee3
-                self.cc = cc3
+
 
     # Instance variables for each Structure object
-    def __init__(self, num, omega, k1, k2, startI):
+    def __init__(self, num, omega, k1, k2):
         if (DEBUG):
             print('Instanciating Structure')
         self.num = num
@@ -223,7 +226,6 @@ class Structure:
         self.k2 = k2/self.kap
         self.layers = []
         self.transferMatrices = []
-        self.startingIndex = startI
 
     def printLayers(self):
         print('\nLAYERS: ')
@@ -236,17 +238,17 @@ class Structure:
         self.layers.pop(n)
 
     # Method for adding a layer to the structure
-    def addLayer(self, name, length, epsilon, mu:
+    def addLayer(self, name, length, epsilon, mu):
         if (DEBUG):
             print('Adding Layer')
         l = self.Layer(name, length, epsilon, mu)
         self.layers.append(l)
 
     # Method for inserting a layer into given index n
-    def insertLayer(self, name, length, epsilon, mu, n, vvo, ee, c):
+    def insertLayer(self, name, length, epsilon, mu, n,):
         if (DEBUG):
             print('Inserting Layer')
-        l = self.Layer(name, length, epsilon, mu, vvo, ee, c)
+        l = self.Layer(name, length, epsilon, mu)
         self.layers.insert(n, l)
 
     # Create the maxwell matrices
@@ -366,7 +368,7 @@ class Structure:
         interfaces = []
         print("Interface")
         #print(-self.layers[0].getLength())
-        interfaces.append(self.startingIndex)
+        interfaces.append(-self.layers[0].getLength())
         for i in range(self.num):
             interfaces.append(interfaces[i] + self.layers[i].getLength())
         return interfaces
@@ -628,7 +630,7 @@ def test():
     omega = 0.398
     k1 = 0.5
     k2 = 0.22
-    s = Structure(size, omega, k1, k2, -15)
+    s = Structure(size, omega, k1, k2)
     e = np.array([[1.5,0,0],
                 [0,8,0],
                 [0,0,1]])
@@ -643,14 +645,14 @@ def test():
                 [0,0,1]])
 
 
-    s.addLayer('Ambient Left', 15, e, u, vvo1, ee1, cc1)
-    s.addLayer('Layer 1', 7, e, u, vvo2, ee2, cc2)
-    s.addLayer('Layer 2', 15, e, u, vvo3, ee1, cc3)
+    s.addLayer('Ambient Left', 15, e, u)
+    s.addLayer('Layer 1', 7, e, u)
+    s.addLayer('Ambient Right', 15, e, u)
     #s.addLayer('Ambient Right', 7, e, u)
     s.printLayers()
     s.removeLayer(1)
     s.printLayers()
-    s.insertLayer('Layer 1', 7, ee, uu, 1, vvo2, ee2, cc2)
+    s.insertLayer('Layer 1', 7, ee, uu, 1)
     s.printLayers()
     m = s.buildMatrices()
     print('Number of Layers: ' + str(len(m)))
