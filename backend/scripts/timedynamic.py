@@ -610,18 +610,47 @@ class Structure:
 
                     e3.append(-(e[2, 0] * fieldVec[0::4].real + e[2,1] * fieldVec[1::4].real - kap2 * fieldVec[2::4].real + kap1 * fieldVec[3::4].real) / (e[2, 2]))
                     h3.append(- (kap2 * fieldVec[0::4].real - kap1 * fieldVec[1::4].real + u[2, 0] * fieldVec[2::4].real + u[2, 1] * fieldVec[3::4].real) / (u[2, 2]))
-
-
-
-                    field = {
-                        'z': z_arr,
-                        'Ex': Ex,
-                        'Ey': Ey,
-                        'Hx': Hx,
-                        'Hy': Hy,
-                        'e3': e3, 
-                        'h3': h3
-                    }
+                Etemp = []
+                Htemp = []
+                for i in range(len(Ex)):
+                    Etemp.append([Ex[i], Ey[i], e3[i][0]])
+                    Htemp.append([Hx[i], Hy[i], h3[i][0]])
+                #print("Etemp")
+                #print(Etemp)
+                epTemp = np.transpose(self.layers[layer].epsilon)
+                muTemp = np.transpose(self.layers[layer].mu)
+                DField = np.dot(Etemp, epTemp)
+                BField = np.dot(Htemp, muTemp)
+                #print("F values:")
+                #print(BField)
+                D1 = []
+                D2 = []
+                D3 = []
+                B1 = []
+                B2 = []
+                B3 = []
+                for i in range(len(DField)):
+                    D1.append(DField[i][0])
+                    D2.append(DField[i][1])
+                    D3.append(DField[i][2])
+                    B1.append(BField[i][0])
+                    B2.append(BField[i][1])
+                    B3.append(BField[i][2])
+            field = {
+                'z': z_arr,
+                'Ex': Ex,
+                'Ey': Ey,
+                'Hx': Hx,
+                'Hy': Hy,
+                'e3': e3, 
+                'h3': h3,
+                'D1': D1,
+                'D2': D2,
+                'D3': D3,
+                'B1': B1,
+                'B2': B2,
+                'B3': B3
+            }
 
 
 def test():
