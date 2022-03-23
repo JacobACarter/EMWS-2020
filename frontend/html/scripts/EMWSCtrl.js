@@ -59,9 +59,17 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   $scope.field;                                                           //The field determined using the Photonic Crystal
   $scope.dispersion;
   $scope.EX = 'Eₓ';                                                       //Label for Ex
-  $scope.EY = 'Eᵧ';                                                       //Label for Ey
+  $scope.EY = 'Eᵧ';    
+  $scope.EZ = 'Ez';                                                     //Label for Ey
   $scope.HX = 'Hₓ';                                                       //Label for Hx
-  $scope.HY = 'Hᵧ';                                                       //Label for Hy
+  $scope.HY = 'Hᵧ';
+  $scope.HZ = 'Hz';                 
+  $scope.DX = 'Dₓ';                                                       //Label for Ex
+  $scope.DY = 'Dᵧ';                                                       //Label for Ey
+  $scope.DZ = 'Dz';                                                       //Label for Hx
+  $scope.BX = 'Bx';
+  $scope.BY = 'By';                 
+  $scope.BZ = 'Bz';
   $scope.expRunning = false;
 
 
@@ -73,7 +81,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
       "epsilonA": [[1.5, 0, 0], [0, 8, 0], [0, 0, 1]],
       "mu": [1, 2, 3, 4],
       "muA": [[4, 0, 0], [0, 1, 0], [0, 0, 1]],
-      "length": 10
+      "length": 15
     },
     {
       "layerName": "Layer 1",
@@ -89,7 +97,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
       "epsilonA": [[1.5, 0, 0], [0, 8, 0], [0, 0, 1]],
       "mu": [1, 2, 3, 4],
       "muA": [[4, 0, 0], [0, 1, 0], [0, 0, 1]],
-      "length": 10
+      "length": 15
     },
   ];
 
@@ -135,15 +143,15 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
 
     $scope.runMathBoxField = devMode;
 
-    if (!devMode) {
-      document.getElementById("mathbox-field-box").classList.add("ng-hide");        // Mathbox
-      document.getElementById("nav-tab3").classList.add("ng-hide");                 // Transmission tab
-      document.getElementById("nav-tab4").classList.add("ng-hide");                 // Dispersion tab
+  //   if (!devMode) {
+  //     document.getElementById("mathbox-field-box").classList.add("ng-hide");        // Mathbox
+  //     document.getElementById("nav-tab3").classList.add("ng-hide");                 // Transmission tab
+  //     document.getElementById("nav-tab4").classList.add("ng-hide");                 // Dispersion tab
 
-      document.getElementsByClassName("dropdown-menu")[0].getElementsByClassName("col-xs-6")[2].classList.add("ng-hide");   // Transmission dropdown box
-      document.getElementsByClassName("dropdown-menu")[0].getElementsByClassName("col-xs-6")[3].classList.add("ng-hide");   // Dispersion dropdown box
-    }
-  }
+  //     document.getElementsByClassName("dropdown-menu")[0].getElementsByClassName("col-xs-6")[2].classList.add("ng-hide");   // Transmission dropdown box
+  //     document.getElementsByClassName("dropdown-menu")[0].getElementsByClassName("col-xs-6")[3].classList.add("ng-hide");   // Dispersion dropdown box
+  //   }
+   }
 
   function addHide() {
     // $(".p2").addClass("ng-hide");
@@ -463,6 +471,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     await updateAll();
 
     console.log("Creating charts...")
+    console.log()
     createFieldChart();
     createAnim();
     setTimeout(() => {
@@ -544,8 +553,8 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   /** Updates the field using the Photonic Crystal. */
   async function updateFields() {
     // OLD CODE
-    $scope.crystal.Struct.updateScattering();
-    $scope.field = $scope.crystal.determineField();
+    // $scope.crystal.Struct.updateScattering();
+    // $scope.field = $scope.crystal.determineField();
 
     // NEW CODE
     console.time("Backend Time for Field")
@@ -581,9 +590,18 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     data.addColumn('number', 'z');                              //Adds z column to data table
     //data.addColumn('number', document.getElementById("shownVal").value);
     data.addColumn('number', $scope.EX);                        //Adds Ex column to data table
-    data.addColumn('number', $scope.EY);                        //Adds Ey column to data table
+    data.addColumn('number', $scope.EY);   
+    data.addColumn('number', $scope.EZ);                        //Adds Hy column to data table
     data.addColumn('number', $scope.HX);                        //Adds Hx column to data table
     data.addColumn('number', $scope.HY);                        //Adds Hy column to data table
+    data.addColumn('number', $scope.HZ);                       //Adds Hy column to data table
+    // data.addColumn('number', $scope.BX);                        //Adds Ex column to data table
+    // data.addColumn('number', $scope.BY);   
+    // data.addColumn('number', $scope.BZ);                        //Adds Hy column to data table
+    // data.addColumn('number', $scope.DX);                        //Adds Hx column to data table
+    // data.addColumn('number', $scope.DY);                        //Adds Hy column to data table
+    // data.addColumn('number', $scope.DZ);         
+
 
     //Iterate through fields values
     for (var i = 0, N = fieldData.z.length; i < N; i++) {
@@ -594,8 +612,14 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
 
       //NEW CODE
       data.addRows([
-        [fieldData.z[i], fieldData.Ex[i], fieldData.Ey[i], fieldData.Hx[i], fieldData.Hy[i]]
-    ]);
+        [fieldData.z[i], fieldData.Ex[i], fieldData.Ey[i], fieldData.Ez[i], fieldData.Hx[i], fieldData.Hy[i], fieldData.Hz[i]]
+        // [fieldData.z[i], fieldData.Bx[i], fieldData.By[i], fieldData.Bz[i], fieldData.Dx[i], fieldData.Dy[i], fieldData.Dz[i]]]
+      ]
+      );
+      var colors = ['red', 'orange', 'yellow', 'green', 'blue',  'purple'];
+      colors.forEach(function (color, index) {
+      data.setColumnProperty(index + 1, 'color', color);
+  })
     }
 
     function printInterfaces(dataTable) { //prints the colored squares on the top of the chart
@@ -684,7 +708,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
         top: 40
       },
       backgroundColor: 'transparent',
-      colors: ["red", "orange", "blue", "green"]
+      colors: ['red', 'orange', '#0099C6', 'green', 'blue', 'purple']
     };
 
     chart.draw(data, options);          //Draw the chart

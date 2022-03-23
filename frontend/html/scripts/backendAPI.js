@@ -8,7 +8,9 @@
 var backendAPI = backendAPI || {};
 
 // If you want to use a localhost, just change to "http://localhost:5000/""
-const API_HOST = "https://emws.pythonanywhere.com/"
+// const API_HOST = "https://emws.pythonanywhere.com/"
+const API_HOST = "http://localhost:5000/"
+
 
 /** Performs a request to a specific route on the given API host */
 const request = async (route, body, request_type="POST", content_type="application/json") => {
@@ -474,11 +476,12 @@ class Structure {
         eigenvectors: orderEigenvectors(convertMatrixArrayToPythonParsable(this.eigenvectors), this.eigenOrderLeft, this.eigenOrderRight)
       }
     }
-
+    console.log('-------------------------------')
     console.log(data)
 
     try {
-      res = await request("structure/field", data, "POST")
+      res = await request("structure/completefield", data, "POST")
+      console.log('res-------', res)
     } catch(e) {
       console.error(e)
       console.log("Failed to get field!")

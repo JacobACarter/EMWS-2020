@@ -5,7 +5,8 @@ import numpy as np
 from flask_cors import CORS, cross_origin
 import sys
 sys.path.append('/Users/joelkeller/EMWS-2020/backend')
-from scattering import Structure as s
+# from scattering import Structure as s
+from timedynamic import Structure as struc
 
 
 # Run server by calling python app.py
@@ -13,7 +14,7 @@ app = Flask(__name__)
 # List of accepted origins
 origins = ["http://localhost:8000", "https://www.math.lsu.edu"]
 # Change origins to '*' if this solution gives issues
-CORS(app, resources={r"/structure": {"origins": origins}})
+CORS(app, resources={r"/structure": {"origins": "*"}})
 
 # Greeting message, currently unused
 base =  '''
@@ -31,6 +32,7 @@ base =  '''
 @cross_origin()
 def hello_world():
     return render_template('index.html')
+
 
 # Function to encode complex numbers into tuples to allow for json serialization
 def encode_complex(z):
@@ -206,137 +208,137 @@ def modes():
 
     return json.jsonify(data)
 
-# Route for getting data points
-@app.route('/structure/field', methods=['POST'])
-@cross_origin()
-def field():
-    assert request.method == 'POST'
-    # print('Field route beginning')
-    req = json.loads(request.data)
-    omega = req['omega']
-    k1 = req['k1']
-    k2 = req['k2']
-    layers = req['layers']
-    num = len(layers)
-    struct = s(num, omega, k1, k2)
-    for layer in layers:
-        struct.addLayer(layer['name'], layer['length'], layer['epsilon'], layer['mu'])
+# # Route for getting data points
+# @app.route('/structure/field', methods=['POST'])
+# @cross_origin()
+# def field():
+#     assert request.method == 'POST'
+#     # print('Field route beginning')
+#     req = json.loads(request.data)
+#     omega = req['omega']
+#     k1 = req['k1']
+#     k2 = req['k2']
+#     layers = req['layers']
+#     num = len(layers)
+#     struct = s(num, omega, k1, k2)
+#     for layer in layers:
+#         struct.addLayer(layer['name'], layer['length'], layer['epsilon'], layer['mu'])
 
-    # Setup return data
-    data = {}
+#     # Setup return data
+#     data = {}
 
-    # Get existing data
-    maxwell_matrices = None
-    eigenvalues = None
-    eigenvectors = None
+#     # Get existing data
+#     maxwell_matrices = None
+#     eigenvalues = None
+#     eigenvectors = None
 
-    try:
-        maxwell_matrices = req['maxwell_matrices']
-    except Exception:
-        pass
-        #print('\nFailed to load maxwell. Will calculate data')
-    try:
-        eigenvalues = req['eigenvalues']
-        eigenvectors = req['eigenvectors']
-    except Exception:
-        pass
-        #print('\nFailed to load eigen system. Will calculate data')
+#     try:
+#         maxwell_matrices = req['maxwell_matrices']
+#     except Exception:
+#         pass
+#         #print('\nFailed to load maxwell. Will calculate data')
+#     try:
+#         eigenvalues = req['eigenvalues']
+#         eigenvectors = req['eigenvectors']
+#     except Exception:
+#         pass
+#         #print('\nFailed to load eigen system. Will calculate data')
 
 
-    # Handle maxwells
-    if maxwell_matrices == None:
-        struct.buildMatrices()
-        maxwells = []
-        for maxwell in struct.maxwell:
-            m = encode_maxwell(maxwell)
-            maxwells.append(m)
-        data['maxwell_matrices'] = maxwells
-    else:
-        maxwells = []
-        for maxwell in maxwell_matrices:
-            maxwells.append(decode_maxwell(maxwell))
-        struct.importMatrices(maxwells)
+#     # Handle maxwells
+#     if maxwell_matrices == None:
+#         struct.buildMatrices()
+#         maxwells = []
+#         for maxwell in struct.maxwell:
+#             m = encode_maxwell(maxwell)
+#             maxwells.append(m)
+#         data['maxwell_matrices'] = maxwells
+#     else:
+#         maxwells = []
+#         for maxwell in maxwell_matrices:
+#             maxwells.append(decode_maxwell(maxwell))
+#         struct.importMatrices(maxwells)
 
-    #Handle eigendata
-    if eigenvalues == None or eigenvectors == None:
-        struct.calcEig()
-        struct.calcModes()
-        e_vals = []
-        e_vecs = []
-        i = 0
-        for layer in struct.layers:
-            n = encode_eigen(layer.eigVal.tolist())
-            o = encode_evecs(layer.eigVec.tolist())
+#     #Handle eigendata
+#     if eigenvalues == None or eigenvectors == None:
+#         struct.calcEig()
+#         struct.calcModes()
+#         e_vals = []
+#         e_vecs = []
+#         i = 0
+#         for layer in struct.layers:
+#             n = encode_eigen(layer.eigVal.tolist())
+#             o = encode_evecs(layer.eigVec.tolist())
 
-            e_vals.append(n)
-            e_vecs.append(o)
-            i += 1
-        data['eigenvalues'] = e_vals
-        data['eigenvectors'] = e_vecs
-    else:
-        e_vals = []
-        e_vecs = []
-        for vals in eigenvalues:
-            e_vals.append(decode_eigen(vals))
-        for vecs in eigenvectors:
-            e_vecs.append(decode_evecs(vecs))
-        struct.importEig(e_vals, e_vecs)
-        struct.calcModes()
+#             e_vals.append(n)
+#             e_vecs.append(o)
+#             i += 1
+#         data['eigenvalues'] = e_vals
+#         data['eigenvectors'] = e_vecs
+#     else:
+#         e_vals = []
+#         e_vecs = []
+#         for vals in eigenvalues:
+#             e_vals.append(decode_eigen(vals))
+#         for vecs in eigenvectors:
+#             e_vecs.append(decode_evecs(vecs))
+#         struct.importEig(e_vals, e_vecs)
+#         struct.calcModes()
 
-    # Calculate Scattering Matrix and Constants
-    incoming = None
-    try:
-        incoming = decode_eigen(req['incoming'])
-    except Exception:
-        print('\nDid not find incoming constants! Using defaults...')
-        incoming = [1, 0, 0, 0]
+#     # Calculate Scattering Matrix and Constants
+#     incoming = None
+#     try:
+#         incoming = decode_eigen(req['incoming'])
+#     except Exception:
+#         print('\nDid not find incoming constants! Using defaults...')
+#         incoming = [1, 0, 0, 0]
 
-    struct.calcScattering()
-    struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
-    data['scattering'] = encode_scattering(struct.scattering)
-    data['constants'] = encode_constants(struct.constants)
+#     struct.calcScattering()
+#     struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
+#     data['scattering'] = encode_scattering(struct.scattering)
+#     data['constants'] = encode_constants(struct.constants)
 
-    num_points = None
-    try:
-        num_points = req['num_points']
-    except Exception:
-        num_points = 200
+#     num_points = None
+#     try:
+#         num_points = req['num_points']
+#     except Exception:
+#         num_points = 200
 
-    # This needs to be optimized, either calcuate all from the beginning or
-    #   fix the import/decode eigen functions.
-    try:
-        field = struct.determineField(num_points)
-    except Exception:
-        struct.buildMatrices()
-        maxwells = []
-        for maxwell in struct.maxwell:
-            m = encode_maxwell(maxwell)
-            maxwells.append(m)
-        data['maxwell_matrices'] = maxwells
-        struct.calcEig()
-        struct.calcModes()
-        e_vals = []
-        e_vecs = []
-        i = 0
-        for layer in struct.layers:
-            n = encode_eigen(layer.eigVal.tolist())
-            o = encode_evecs(layer.eigVec.tolist())
+#     # This needs to be optimized, either calcuate all from the beginning or
+#     #   fix the import/decode eigen functions.
+#     try:
+#         field = struct.determineField(num_points)
+#     except Exception:
+#         struct.buildMatrices()
+#         maxwells = []
+#         for maxwell in struct.maxwell:
+#             m = encode_maxwell(maxwell)
+#             maxwells.append(m)
+#         data['maxwell_matrices'] = maxwells
+#         struct.calcEig()
+#         struct.calcModes()
+#         e_vals = []
+#         e_vecs = []
+#         i = 0
+#         for layer in struct.layers:
+#             n = encode_eigen(layer.eigVal.tolist())
+#             o = encode_evecs(layer.eigVec.tolist())
 
-            e_vals.append(n)
-            e_vecs.append(o)
-            i += 1
-        data['eigenvalues'] = e_vals
-        data['eigenvectors'] = e_vecs
-        struct.calcScattering()
-        struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
-        data['scattering'] = encode_scattering(struct.scattering)
-        data['constants'] = encode_constants(struct.constants)
-        field = struct.determineField(num_points)
-    data['field'] = field
+#             e_vals.append(n)
+#             e_vecs.append(o)
+#             i += 1
+#         data['eigenvalues'] = e_vals
+#         data['eigenvectors'] = e_vecs
+#         struct.calcScattering()
+#         struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
+#         data['scattering'] = encode_scattering(struct.scattering)
+#         data['constants'] = encode_constants(struct.constants)
+#         field = struct.determineField(num_points)
+#     data['field'] = field
 
-    # print('Field route completed')
+#     # print('Field route completed')
 
-    return json.jsonify(data)
+#     return json.jsonify(data)
 
 # Route to update structure if one exists, else it will create one
 # Returns constants, maxwells, eigenvectors and values, and scattering matrix
@@ -361,7 +363,7 @@ def constants():
     e_vals = []
     e_vecs = []
     num = len(layers)
-    struct = s(num, omega, k1, k2)
+    struct = struc(num, omega, k1, k2)
     try:
         maxwells = decode_maxwell(req['maxwell'])
         maxwell = True
@@ -422,6 +424,198 @@ def constants():
     # print('Constants route completed')
 
     return response
+
+@app.route('/structure/completefield', methods=['POST'])
+@cross_origin() 
+def completefield(): 
+    assert request.method == 'POST'
+    # print('Field route beginning')
+    req = json.loads(request.data)
+    omega = req['omega']
+    k1 = req['k1']
+    k2 = req['k2']
+    layers = req['layers']
+    num = len(layers)
+    struct = struc(num, omega, k1, k2)
+    for layer in layers:
+        struct.addLayer(layer['name'], layer['length'], layer['epsilon'], layer['mu'])
+    for layer in struct.layers:
+        print('im getting here')
+
+    # Setup return data
+    data = {}
+
+    # Get existing data
+    maxwell_matrices = None
+    eigenvalues = None
+    eigenvectors = None  
+
+    try:
+        maxwell_matrices = req['maxwell_matrices']
+    except Exception:
+        pass
+        #print('\nFailed to load maxwell. Will calculate data')
+    try:
+        eigenvalues = req['eigenvalues']
+        eigenvectors = req['eigenvectors']
+    except Exception:
+        pass
+        #print('\nFailed to load eigen system. Will calculate data')
+
+
+    # Handle maxwells
+    if maxwell_matrices == None:
+        struct.buildMatrices()
+        maxwells = []
+        for maxwell in struct.maxwell:
+            m = encode_maxwell(maxwell)
+            maxwells.append(m)
+        data['maxwell_matrices'] = maxwells
+    else:
+        maxwells = []
+        for maxwell in maxwell_matrices:
+            maxwells.append(decode_maxwell(maxwell))
+        struct.importMatrices(maxwells)
+
+    #Handle eigendata
+    if eigenvalues == None or eigenvectors == None:
+        struct.calcEig()
+        struct.calcModes()
+        e_vals = []
+        e_vecs = []
+        i = 0
+        for layer in struct.layers:
+            n = encode_eigen(layer.eigVal.tolist())
+            o = encode_evecs(layer.eigVec.tolist())
+
+            e_vals.append(n)
+            e_vecs.append(o)
+            i += 1
+        data['eigenvalues'] = e_vals
+        data['eigenvectors'] = e_vecs
+    else:
+        e_vals = []
+        e_vecs = []
+        for vals in eigenvalues:
+            e_vals.append(decode_eigen(vals))
+        for vecs in eigenvectors:
+            e_vecs.append(decode_evecs(vecs))
+        struct.importEig(e_vals, e_vecs)
+        struct.calcModes()
+
+    # Calculate Scattering Matrix and Constants
+    incoming = None
+    try:
+        incoming = decode_eigen(req['incoming'])
+    except Exception:
+        print('\nDid not  incoming constants! Using defaults...')
+        incoming = [1, 0, 0, 0]
+
+    struct.calcScattering()
+    # struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
+    data['scattering'] = encode_scattering(struct.scattering)
+    # data['constants'] = encode_constants(struct.constants)
+
+    num_points = None
+    try:
+        num_points = req['num_points']
+    except Exception:
+        num_points = 400
+
+    # This needs to be optimized, either calcuate all from the beginning or
+    #   fix the import/decode eigen functions.
+    try:
+        field = struct.determineField(omega, k1, k2, num_points=400)
+    except Exception:
+        struct.buildMatrices()
+        maxwells = []
+        for maxwell in struct.maxwell:
+            m = encode_maxwell(maxwell)
+            maxwells.append(m)
+        data['maxwell_matrices'] = maxwells
+        struct.calcEig()
+        struct.calcModes()
+        e_vals = []
+        e_vecs = []
+        i = 0
+        for layer in struct.layers:
+            n = encode_eigen(layer.eigVal.tolist())
+            o = encode_evecs(layer.eigVec.tolist())
+
+            e_vals.append(n)
+            e_vecs.append(o)
+            i += 1
+        data['eigenvalues'] = e_vals
+        data['eigenvectors'] = e_vecs
+        struct.calcScattering()
+        # struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
+        data['scattering'] = encode_scattering(struct.scattering)
+        # data['constants'] = encode_constants(struct.constants)
+        field = struct.determineField(k1, k2, num_points)
+    data['field'] = field
+
+    # print('Field route completed')
+
+    return json.jsonify(data)
+
+
+# Route for creating a crystal structure and calculating eigen problem
+@app.route('/structure/omega', methods=['POST'])
+@cross_origin()
+def omegas():
+    assert request.method == 'POST'
+    # print('Mode route beginning')
+    # Parse data
+    req = json.loads(request.data)
+    initial_omega = req['initial_omega']
+    final_omega = req['final_omega']
+    k1 = req['k1']
+    k2 = req['k2']
+    layers = req['layers']
+    step = req['step']
+    num = len(layers)
+
+    #for loop omega 
+    for omega in range(initial_omega, final_omega, step):
+    # Create structure
+        struct = s(num, omega, k1, k2)
+        for layer in layers:
+            struct.addLayer(layer['name'], layer['length'], layer['epsilon'], layer['mu'])
+        # Calculate and build structure
+        struct.buildMatrices()
+        struct.calcEig()
+        struct.calcModes()
+
+    # Create list of values for response
+    maxwells = []
+    e_vals = []
+    e_vecs = []
+    modes = []
+    i = 0
+    for layer in struct.layers:
+        m = encode_maxwell(struct.maxwell[i])
+        n = encode_eigen(layer.eigVal.tolist())
+        o = encode_evecs(layer.eigVec.tolist())
+        mm = encode_evecs(layer.modes.tolist())
+
+
+        maxwells.append(m)
+        e_vals.append(n)
+        e_vecs.append(o)
+        modes.append(mm)
+        i += 1
+
+    # Prepare response data
+    data = {
+        'maxwell_matrices': maxwells,
+        'eigenvalues': e_vals,
+        'eigenvectors': e_vecs,
+        'modes': modes
+    }
+    
+    # print('Mode route completed')
+
+    return json.jsonify(data)
 
 if __name__ == '__main__':
     app.run()
