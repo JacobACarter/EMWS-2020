@@ -1,35 +1,39 @@
-import time
 import numpy as np
-# from scipy.linalg import null_space, lstsq
+from numpy.core.numerictypes import ScalarType
+from numpy.lib.function_base import append
+from numpy.linalg import eig
 from scipy.linalg import solve
-from scipy.linalg import eig
-# from numpy.linalg import inv
+import json
 
-# Set precision for printing arrays
-np.set_printoptions(precision=5, suppress=True)
-
-# Set flag to TRUE when needing to debug some stuffs
 DEBUG = False
 
 # Values are for default struct with [0, 1, 0, 0] incoming coefficients
-vv11 = np.array([np.complex(0.0, -0.121293), np.complex(-0.61281, 0.0), np.complex(0.0, 0.121293), np.complex(0.61281, 0.0)], dtype=complex) # np.array([np.complex(-0.121293, 5.97957*(10**-18)), np.complex(0.121293, 2.89059*(10**-17)), np.complex(5.33339*(10**-16), -0.61281), np.complex(4.43682*(10**-17), 0.61281)], dtype=complex)
-vv12 = np.array([np.complex(0.0, 0.600474), np.complex(0.0442088, 0.0), np.complex(0.0, -0.600474), np.complex(-0.0442088, 0.0)], dtype=complex) # np.array([np.complex(0.600474, 1.65551*(10**-17)), np.complex(-0.600474, 4.76095*(10**-16)), np.complex(-1.83054*(10**-16), 0.0442088), np.complex(-1.92455*(10**-16), -0.0442088)], dtype=complex)
-vv13 = np.array([np.complex(0.0, -0.788343), np.complex(0.0, -0.156218), np.complex(0.0, -0.788343), np.complex(0.0, -0.156218)], dtype=complex) # np.array([np.complex(0.788343, 0), np.complex(0.788343, 0), np.complex(-0.156218, -1.0639*(10**-16)), np.complex(-0.156218, -3.73559*(10**-17))], dtype=complex)
-vv14 = np.array([np.complex(0.0, 0.0568719), np.complex(0.0, 0.773373), np.complex(0.0, 0.0568719), np.complex(0.0, 0.773373)], dtype=complex) # np.array([np.complex(-0.0568719, -1.6194*(10**-16)), np.complex(-0.0568719, 2.85786*(10**-16)), np.complex(0.773373, 0), np.complex(0.773373, 0)], dtype=complex)
+vv11 = np.array([complex(0.0, -0.121293), complex(-0.61281, 0.0), complex(0.0, 0.121293), complex(0.61281, 0.0)], dtype=complex) # np.array([complex(-0.121293, 5.97957*(10**-18)), complex(0.121293, 2.89059*(10**-17)), complex(5.33339*(10**-16), -0.61281), complex(4.43682*(10**-17), 0.61281)], dtype=complex)
+vv12 = np.array([complex(0.0, 0.600474), complex(0.0442088, 0.0), complex(0.0, -0.600474), complex(-0.0442088, 0.0)], dtype=complex) # np.array([complex(0.600474, 1.65551*(10**-17)), complex(-0.600474, 4.76095*(10**-16)), complex(-1.83054*(10**-16), 0.0442088), complex(-1.92455*(10**-16), -0.0442088)], dtype=complex)
+vv13 = np.array([complex(0.0, -0.788343), complex(0.0, -0.156218), complex(0.0, -0.788343), complex(0.0, -0.156218)], dtype=complex) # np.array([complex(0.788343, 0), complex(0.788343, 0), complex(-0.156218, -1.0639*(10**-16)), complex(-0.156218, -3.73559*(10**-17))], dtype=complex)
+vv14 = np.array([complex(0.0, 0.0568719), complex(0.0, 0.773373), complex(0.0, 0.0568719), complex(0.0, 0.773373)], dtype=complex) # np.array([complex(-0.0568719, -1.6194*(10**-16)), complex(-0.0568719, 2.85786*(10**-16)), complex(0.773373, 0), complex(0.773373, 0)], dtype=complex)
 
-vv21 = np.array([np.complex(0.0, 0.482924), np.complex(0.0831366, 0.0), np.complex(0.0, -0.482924), np.complex(-0.0831366, 0.0)], dtype=complex) # np.array([np.complex(-0.482924, -3.30323*(10**-18)), np.complex(0.482924, 1.67514*(10**-17)), np.complex(-0.0831366, -2.8195*(10**-17)), np.complex(-0.0831366, 7.03906*(10**-17))], dtype=complex)
-vv22 = np.array([np.complex(0.0, -0.128803), np.complex(-0.872776, 0.0), np.complex(0.0, 0.128803), np.complex(0.872776, 0.0)], dtype=complex) # np.array([np.complex(0.128803, 6.98095*(10**-17)), np.complex(-0.128803, 9.25412*(10**-17)), np.complex(0.872776, 0), np.complex(0.872776, 0)], dtype=complex)
-vv23 = np.array([np.complex(0.0, -0.0821325), np.complex(0.0, 0.464742), np.complex(0.0, -0.0821325), np.complex(0.0, 0.464742)], dtype=complex) # np.array([np.complex(-0.0821325, 9.36681*(10**-18)), np.complex(-0.0821325, -1.29001*(10**-17)), np.complex(-1.29383*(10**-16), 0.464742), np.complex(-8.46814*(10**-18), -0.464742)], dtype=complex)
-vv24 = np.array([np.complex(0.0, 0.862234), np.complex(0.0, -0.123954), np.complex(0.0, 0.862234), np.complex(0.0, -0.123954)], dtype=complex) # np.array([np.complex(0.862234, 0), np.complex(0.862234, 0), np.complex(-3.97554*(10**-18), -0.123954), np.complex(-9.25688*(10**-17), 0.123954)], dtype=complex)
+vv21 = np.array([complex(0.0, 0.482924), complex(0.0831366, 0.0), complex(0.0, -0.482924), complex(-0.0831366, 0.0)], dtype=complex) # np.array([complex(-0.482924, -3.30323*(10**-18)), complex(0.482924, 1.67514*(10**-17)), complex(-0.0831366, -2.8195*(10**-17)), complex(-0.0831366, 7.03906*(10**-17))], dtype=complex)
+vv22 = np.array([complex(0.0, -0.128803), complex(-0.872776, 0.0), complex(0.0, 0.128803), complex(0.872776, 0.0)], dtype=complex) # np.array([complex(0.128803, 6.98095*(10**-17)), complex(-0.128803, 9.25412*(10**-17)), complex(0.872776, 0), complex(0.872776, 0)], dtype=complex)
+vv23 = np.array([complex(0.0, -0.0821325), complex(0.0, 0.464742), complex(0.0, -0.0821325), complex(0.0, 0.464742)], dtype=complex) # np.array([complex(-0.0821325, 9.36681*(10**-18)), complex(-0.0821325, -1.29001*(10**-17)), complex(-1.29383*(10**-16), 0.464742), complex(-8.46814*(10**-18), -0.464742)], dtype=complex)
+vv24 = np.array([complex(0.0, 0.862234), complex(0.0, -0.123954), complex(0.0, 0.862234), complex(0.0, -0.123954)], dtype=complex) # np.array([complex(0.862234, 0), complex(0.862234, 0), complex(-3.97554*(10**-18), -0.123954), complex(-9.25688*(10**-17), 0.123954)], dtype=complex)
 
 mathematica_vectors = np.array([[vv11, vv12, vv13, vv14],
                                 [vv21, vv22, vv23, vv24],
                                 [vv11, vv12, vv13, vv14]], dtype=complex)
 
-ee1 = np.array([np.complex(0.0, 1.90425), np.complex(-0.360895, 0.0), np.complex(0.0, -1.90425), np.complex(0.360895, 0.0)], dtype=complex) # np.array([np.complex(2.09202*(10**-16), -1.90425), np.complex(4.44089*(10**-16), 1.90425), np.complex(0.360895, -9.86973*(10**-18)), np.complex(-0.360895, -8.73395*(10**-17))], dtype=complex)
-ee2 = np.array([np.complex(0.0, 1.67391), np.complex(-0.107923, 0.0), np.complex(0.0, -1.67391), np.complex(0.107923, 0.0)], dtype=complex) # np.array([np.complex(-3.33067*(10**-16), -1.67391), np.complex(-2.22045*(10**-16), 1.67391), np.complex(0.107923, -1.6017*(10**-17)), np.complex(-0.107923, -8.92287*(10**-18))], dtype=complex)
+ee1 = np.array([complex(0.0, 1.90425), complex(-0.360895, 0.0), complex(0.0, -1.90425), complex(0.360895, 0.0)], dtype=complex) # np.array([complex(2.09202*(10**-16), -1.90425), complex(4.44089*(10**-16), 1.90425), complex(0.360895, -9.86973*(10**-18)), complex(-0.360895, -8.73395*(10**-17))], dtype=complex)
+ee2 = np.array([complex(0.0, 1.67391), complex(-0.107923, 0.0), complex(0.0, -1.67391), complex(0.107923, 0.0)], dtype=complex) # np.array([complex(-3.33067*(10**-16), -1.67391), complex(-2.22045*(10**-16), 1.67391), complex(0.107923, -1.6017*(10**-17)), complex(-0.107923, -8.92287*(10**-18))], dtype=complex)
 
 mEE = [ee1, ee2, ee1]
+
+vvo1 = np.array([vv11, vv12, vv13, vv14])
+vvo2 = np.array([vv21, vv22, vv23, vv24])
+vvo3 = np.array([vv11, vv12, vv13, vv14])
+
+cc1 = np.array([complex(1.0, 0.0), complex(0, 0), complex(-.43674, 0.643602), complex(.0492448, -.056299)])
+cc2 = np.array([complex(-.164197,-.0712676), complex(-.709687, -1.02698), complex(.104261, -.0952632), complex(-.27917, -.0752636)])
+cc3 = np.array([complex(.520079,.352919), complex(.0842069, .179057), complex(0,0), complex(0,0)])
 
 def calcFactors(pyV, pyVals):
     print('Factors:')
@@ -153,9 +157,27 @@ def organizeEigenForMiddleLayers(val, vec):
 
     return val, vec
 
+#Temporary Method to Hard Code In Values
+
+def loadDefaults(self):
+    if self.name == "Ambient Left":
+        self.vvo = vvo1
+        self.ee = ee1
+        self.constants = cc1
+    elif self.name == "Layer 1":
+        self.vvo = vvo2
+        self.ee = ee2
+        self.constants = cc2
+    elif self.name == "Ambient Right":
+        self.vvo = vvo3
+        self.ee = ee1
+        self.constants = cc3
+    else:
+        print("didn't load correctly")
+
+
 # Classes for storing structure data
 class Structure:
-
     # Sub class for defining each layer
     class Layer:
         # Instance variables for each Layer object
@@ -168,12 +190,29 @@ class Structure:
             self.mu = mu
             self.solution = np.zeros(4, dtype=complex)
             self.eigVec = [np.zeros((4,1), dtype=complex)] * 4
+            self.eigVal = [np.zeros(4)]
+            #test method
+            #loadDefaults(self)
 
         def __str__(self):
             try:
                 return self.name + ': ' + str(self.length) + '\nEigen: ' + self.eigVal + self.eigVec
             except:
                 return self.name + ': ' + str(self.length)
+
+        def getEigVal(self):
+            return self.eigVal
+        
+        def getEps(self):
+            return self.epsilon
+
+        def getMu(self):
+            return self.mu
+
+        def getLength(self):
+            return self.length
+
+
 
     # Instance variables for each Structure object
     def __init__(self, num, omega, k1, k2):
@@ -206,7 +245,7 @@ class Structure:
         self.layers.append(l)
 
     # Method for inserting a layer into given index n
-    def insertLayer(self, name, length, epsilon, mu, n):
+    def insertLayer(self, name, length, epsilon, mu, n,):
         if (DEBUG):
             print('Inserting Layer')
         l = self.Layer(name, length, epsilon, mu)
@@ -265,11 +304,16 @@ class Structure:
             print('\nImporting Maxwell from Data')
         self.maxwell = matrices
 
+    def printMaxwell(self):
+        print('Maxwells:')
+        for m in self.maxwell:
+            print(m)
+
     # Calculate the eigenproblem for all layers of the structure
     def calcEig(self):
         if (DEBUG):
             print('\nCalculating Eigen Problem')
-        for n in range(self.num):
+        for n in range(len(self.layers)):
             if (DEBUG):
                 print('For layer ' + str(n+1))
             #start = time.perf_counter()
@@ -302,28 +346,13 @@ class Structure:
         if (DEBUG):
             print('\nImporting previously created eigendata')
         for n in range(len(self.layers)):
+            print("I'M WORKING")
             if(DEBUG):
                 print(f'Eigenvalue array {n}:\n{e_vals[n]}')
                 print(f'Eigenvector array {n}:\n{e_vecs[n]}')
             self.layers[n].eigVal = e_vals[n]
             self.layers[n].eigVec = e_vecs[n]
 
-    def debugEigV(self):
-        vectors = []
-        values = []
-        for n in range(self.num):
-            vectors.append(self.layers[n].eigVec)
-            values.append(self.layers[n].eigVal)
-        rats = calcFactors(vectors, values)
-        adjusted_vecs = []
-        for n in range(self.num):
-            # self.layers[n].eigVec *= rats[n]
-            self.layers[n].eigVec = mathematica_vectors[n]
-            adjusted_vecs.append(self.layers[n].eigVec)
-            print('Eigenvectors adjusted')
-        return adjusted_vecs
-
-    # Calculate the modes. Result will not contain constant multiplication
     def calcModes(self):
         if (DEBUG):
             print('\nCalculating Modes')
@@ -335,20 +364,16 @@ class Structure:
             if (DEBUG):
                 print(str(layer.name) + ' Modes:\nc*' + str(layer.modes))
 
-    def printMaxwell(self):
-        print('Maxwells:')
-        for m in self.maxwell:
-            print(m)
-
-    # Calculate the location of the endpoints of each layer
     def interfaces(self):
         interfaces = []
-        interfaces.append(-self.layers[0].length)
+        print("Interface")
+        #print(-self.layers[0].getLength())
+        interfaces.append(-self.layers[0].getLength())
         for i in range(self.num):
-            interfaces.append(interfaces[i] + self.layers[i].length)
+            interfaces.append(interfaces[i] + self.layers[i].getLength())
         return interfaces
 
-    # Calculate the scattering matrix to be used in the constants calulation
+
     def calcScattering(self):
         # if (not DEBUG):
             # self.debugEigV()
@@ -423,6 +448,7 @@ class Structure:
             print("\n")
         self.scattering = s
         return s
+    
 
     # Calculate the constants for each layer to be used in the fields/solutions
     def calcConstants(self, c1, c2, c3, c4):
@@ -489,55 +515,7 @@ class Structure:
         # print('S*c:', str(cs))
         # print(cs == b)
         return c
-
-    # Get all the solutions for the structure
-    def solution(self):
-        solutions = []
-        for n in range(self.num):
-            solutions.append(self.layers[n].solution)
-        return solutions
-
-    # Check the sum of all the solutions is 0
-    def checkSol(self):
-        total = 0
-        sol = self.solution()
-        for n in range(self.num):
-            for i in range(4):
-                total =+ sol[n][i]
-
-        return total == 0
-
-    def printSol(self):
-        print('Solutions:')
-        for s in self.solution():
-            print(s)
-            total = 0
-            for i in s:
-                total += i
-            print(total)
-
-
-    def check_interfaces(self):
-        field = self.field
-        fields = []
-        interfaces = self.interfaces()
-        interfaces.pop()
-        interfaces.pop(0)
-        for i in range(self.num-1):
-            index = field['z'].index(interfaces[i])
-            Ex = field['Ex'][index]
-            Ey = field['Ey'][index]
-            Hx = field['Hx'][index]
-            Hy = field['Hy'][index]
-            truth_table = [ np.isclose(field['Ex'][index], field['Ex'][index+1]),
-                            np.isclose(field['Ey'][index], field['Ey'][index+1]),
-                            np.isclose(field['Hx'][index], field['Hx'][index+1]),
-                            np.isclose(field['Hy'][index], field['Hy'][index+1])
-                        ]
-            print(truth_table)
-            fields.append([Ex,Ey,Hx,Hy])
-        print(fields)
-
+    
     def determineFieldAtSpecificPointInLayer(self, z, layer):
         z_ends = self.interfaces()
         interfaces = [0] * self.num
@@ -551,104 +529,133 @@ class Structure:
                 interfaces[z] = z_ends[z] - z_ends[z-1]
 
         piScalar = np.pi * 0.4
-        scalar = np.exp(np.multiply(np.complex(0.0, 1.0), piScalar))
+        scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
         scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
         expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - interfaces[layer]))))
         expMat = np.matmul(scalarMat, expDiag)
         fieldVec = np.matmul(expMat, current_c)
-        print("fieldvec")
-        print(fieldVec)
         return fieldVec
+    
+    def determineField(self, omega, k1, k2, num_points=400):
+            print("Determine Field:")
+            self.omega = omega 
+            self.k1 = k1
+            self.k2 = k2
+            kap1 = self.k1/self.omega
+            kap2 = self.k2/self.omega
+            num_layers = self.num
+            z_ends = self.interfaces()              # zzz
+            interfaces = [0] * (self.num - 1)       # zz
+            references = np.zeros(num_layers)       # zref
+            z_arr = []
+            Ex = []
+            Ey = []
+            Hx = []
+            Hy = []
+            e3 = []
+            h3 = []
+            
 
-    # Determine the field of a structure
-    def determineField(self, num_points=200):
-        num_layers = self.num
-        z_ends = self.interfaces()              # zzz
-        interfaces = [0] * (self.num - 1)       # zz
-        references = np.zeros(num_layers)       # zref
-        z_arr = []
-        Ex = []
-        Ey = []
-        Hx = []
-        Hy = []
+            # Calculate the reference points
+            for i in range(num_layers):
+                # The first layer reference point is the right endpoint
+                if i == 0:
+                    references[i] = 0
+                # Calculate the rest of the reference points, the left endpoint
+                else:
+                    references[i] = z_ends[i]
+            # Calculate the locations (z-values) of the interfaces
+            for i in range(num_layers-1):
+                # First interface is always at 0
+                if i == 0:
+                    interfaces[i] = 0
+                # Next interface is the endpoint of the following layer
+                else:
+                    interfaces[i] = z_ends[i+1]
 
-        # Calculate the reference points
-        for i in range(num_layers):
-            # The first layer reference point is the right endpoint
-            if i < 2:
-                references[i] = 0
-            # Calculate the rest of the reference points, the left endpoint
-            else:
-                references[i] = (z_ends[i] - z_ends[i-1])
-        # Calculate the locations (z-values) of the interfaces
-        for i in range(num_layers-1):
-            # First interface is always at 0
-            if i == 0:
-                interfaces[i] = 0
-            # Next interface is the endpoint of the following layer
-            else:
-                interfaces[i] = z_ends[i+1]
+            for layer in range(num_layers):
+            
+                length = z_ends[layer+1] - z_ends[layer]
 
-        for layer in range(num_layers):
-            length = z_ends[layer+1] - z_ends[layer]
+                current_c = self.constants[layer*4:4+(layer*4)]
 
-            current_c = self.constants[layer*4:4+(layer*4)]
-
-            if (DEBUG):
-                print("Constant vector at layer " + str(layer))
-                print(current_c)
-
-            for i in range(num_points):
-                z = z_ends[layer] + (i * length) / num_points
-
+                if (DEBUG):
+                    print("Constant vector at layer " + str(layer))
+                    print(current_c)
+                e = self.layers[layer].epsilon
+                u = self.layers[layer].mu
                 piScalar = np.pi * 0.4
-
-                scalar = np.exp(np.multiply(np.complex(0.0, 1.0), piScalar))
+                scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
                 scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
-                expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - references[layer]))))
-                expMat = np.matmul(scalarMat, expDiag)
-                fieldVec = np.matmul(expMat, current_c)
 
-                # if i == 0:
-                    # print("Field vec at " + str(z))
-                    # print(fieldVec)
+                current_c = self.constants[layer*4:4+(layer*4)]
+                
+                for i in range(num_points):
+                    z = z_ends[layer] + i*length/ num_points
+                    z_arr.append(z)
+                    expDiag = np.diag(np.exp(np.multiply((z - references[layer]), self.layers[layer].eigVal)))
+                    expMat = np.dot(scalarMat, expDiag)
 
-                z_arr.append(z)
-                Ex.append(fieldVec.item(0).real)
-                Ey.append(fieldVec.item(1).real)
-                Hx.append(fieldVec.item(2).real)
-                Hy.append(fieldVec.item(3).real)
-        # for i in range(num_layers-1):
-        #     print(Ex[i*num_points] == Ex[i*num_points+1])
-        #     print(Ey[i*num_points] == Ey[i*num_points+1])
-        #     print(Hx[i*num_points] == Hx[i*num_points+1])
-        #     print(Hy[i*num_points] == Hx[i*num_points+1])
-
-        field = {
-            'z': z_arr,
-            'Ex': Ex,
-            'Ey': Ey,
-            'Hx': Hx,
-            'Hy': Hy
-        }
-
-        self.field = field
-        i1 = [self.determineFieldAtSpecificPointInLayer(0, 0), self.determineFieldAtSpecificPointInLayer(0, 1)]
-        i2 = [self.determineFieldAtSpecificPointInLayer(7, 1), self.determineFieldAtSpecificPointInLayer(7, 2)]
-        # print(i1)
-        # print(i2)
-        # print(np.array_equal(i1[0], i1[1]))
-        # print(np.array_equal(i2[0], i2[1]))
-
-        return field
+                    fieldVec = np.dot(expMat, current_c)
+                    print(fieldVec)
 
 
-    # The structure string method
-    def __str__(self):
-        return 'Omega: ' + str(self.omega) + '\n(k1,k2): (' + str(self.k1*self.omega) + ',' + str(self.k2*self.omega) + ')\n'
+            
+
+                    z_arr.append(z)
+                    Ex.append(fieldVec.item(0).real)
+                    Ey.append(fieldVec.item(1).real)
+                    Hx.append(fieldVec.item(2).real)
+                    Hy.append(fieldVec.item(3).real)
 
 
-# Test code
+                    #print((-(e[2, 0] * fieldVec[0::4].real + e[2,1] * fieldVec[1::4].real - kap2 * fieldVec[2::4].real + kap1 * fieldVec[3::4].real) / (e[2, 2])))
+                    e3.append(-(e[2, 0] * fieldVec[0::4].real + e[2,1] * fieldVec[1::4].real - kap2 * fieldVec[2::4].real + kap1 * fieldVec[3::4].real) / (e[2, 2]))
+                    h3.append(- (kap2 * fieldVec[0::4].real - kap1 * fieldVec[1::4].real + u[2, 0] * fieldVec[2::4].real + u[2, 1] * fieldVec[3::4].real) / (u[2, 2]))
+                Etemp = []
+                Htemp = []
+                #print(e3)
+                for i in range(len(Ex)):
+                    Etemp.append([Ex[i], Ey[i], e3[i]])
+                    Htemp.append([Hx[i], Hy[i], h3[i]])
+                #print("Etemp")
+                #print(Etemp)
+                epTemp = np.transpose(self.layers[layer].epsilon)
+                muTemp = np.transpose(self.layers[layer].mu)
+                DField = np.dot(Etemp, epTemp)
+                BField = np.dot(Htemp, muTemp)
+                #print("F values:")
+                #print(BField)
+                D1 = []
+                D2 = []
+                D3 = []
+                B1 = []
+                B2 = []
+                B3 = []
+                for i in range(len(DField)):
+                    D1.append(DField[i][0])
+                    D2.append(DField[i][1])
+                    D3.append(DField[i][2])
+                    B1.append(BField[i][0])
+                    B2.append(BField[i][1])
+                    B3.append(BField[i][2])
+            field = {
+                'z': z_arr,
+                'Ex': Ex,
+                'Ey': Ey,
+                'Hx': Hx,
+                'Hy': Hy,
+                'e3': e3, 
+                'h3': h3,
+                'D1': D1,
+                'D2': D2,
+                'D3': D3,
+                'B1': B1,
+                'B2': B2,
+                'B3': B3
+            }
+
+
 def test():
     print('Starting Test:')
     size = 3
@@ -668,9 +675,12 @@ def test():
     uu = np.array([[1,0,0],
                 [0,4,0],
                 [0,0,1]])
-    s.addLayer('Ambient Left', 10, e, u)
+
+
+    s.addLayer('Ambient Left', 15, e, u)
     s.addLayer('Layer 1', 7, e, u)
-    s.addLayer('Ambient Right', 10, e, u)
+    s.addLayer('Ambient Right', 15, e, u)
+    #s.addLayer('Ambient Right', 7, e, u)
     s.printLayers()
     s.removeLayer(1)
     s.printLayers()
@@ -685,21 +695,18 @@ def test():
     s.printMaxwell()
     s.calcEig()
     s.calcModes()
-    c1 = 1
-    c2 = 0
+    c1 = 0
+    c2 = 1
     c3 = 0
     c4 = 0
-    const = s.calcConstants(c1,c2,c3,c4)
-    print('With incoming coefficients (' + str(c1)+ ', ' + str(c2)+ ') on the left and (' + str(c3)+ ', ' + str(c4)+ ') on the right')
-    s.printSol()
-    print('\nFinal Constants: \n' + str(const))
-    print('\nFinal Scattering Matrix:\n' + str(s.scattering))
-    print('Sum of solutions in all layers is 0: ' + str(s.checkSol()))
-    print('\n\nEnd of test\n\n')
-
+    s.calcConstants(c1,c2,c3,c4)
+    s.determineField(omega, k1, k2)
+#    s.calcFields(e, ee, u, uu, k1, k2)
+#    s.fields(e, ee, u, uu)
 
 def main():
-    start = time.perf_counter()
+    print("Starting Test!")
     test()
-    end = time.perf_counter()
-    print(f'Ran test in: {end-start:0.4f} seconds')
+    print("Finished Test!")
+
+main()
