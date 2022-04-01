@@ -27,13 +27,13 @@ ee2 = np.array([complex(0.0, 1.67391), complex(-0.107923, 0.0), complex(0.0, -1.
 
 mEE = [ee1, ee2, ee1]
 
-vvo1 = np.array([vv11, vv12, vv13, vv14])
-vvo2 = np.array([vv21, vv22, vv23, vv24])
-vvo3 = np.array([vv11, vv12, vv13, vv14])
+# vvo1 = np.array([vv11, vv12, vv13, vv14])
+# vvo2 = np.array([vv21, vv22, vv23, vv24])
+# vvo3 = np.array([vv11, vv12, vv13, vv14])
 
-cc1 = np.array([complex(1.0, 0.0), complex(0, 0), complex(-.43674, 0.643602), complex(.0492448, -.056299)])
-cc2 = np.array([complex(-.164197,-.0712676), complex(-.709687, -1.02698), complex(.104261, -.0952632), complex(-.27917, -.0752636)])
-cc3 = np.array([complex(.520079,.352919), complex(.0842069, .179057), complex(0,0), complex(0,0)])
+# cc1 = np.array([complex(1.0, 0.0), complex(0, 0), complex(-.43674, 0.643602), complex(.0492448, -.056299)])
+# cc2 = np.array([complex(-.164197,-.0712676), complex(-.709687, -1.02698), complex(.104261, -.0952632), complex(-.27917, -.0752636)])
+# cc3 = np.array([complex(.520079,.352919), complex(.0842069, .179057), complex(0,0), complex(0,0)])
 
 def calcFactors(pyV, pyVals):
     print('Factors:')
@@ -597,7 +597,7 @@ class Structure:
                     expMat = np.dot(scalarMat, expDiag)
 
                     fieldVec = np.dot(expMat, current_c)
-                    print(fieldVec)
+                    #print(fieldVec)
 
 
             
@@ -654,6 +654,7 @@ class Structure:
                 'B2': B2,
                 'B3': B3
             }
+            print(Ex)
 
 
 def test():
