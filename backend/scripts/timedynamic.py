@@ -322,10 +322,7 @@ class Structure:
             # print(eigVal, eigVec)
             # for i in range(4):
             #     self.layers[n].eigVec[i] = np.transpose(eigVec[i])
-            if n == 0 or n == self.num - 1:
-                self.layers[n].eigVal, self.layers[n].eigVec = organizeEigen(eigVal, eigVec)
-            else:
-                self.layers[n].eigVal, self.layers[n].eigVec = organizeEigenForMiddleLayers(eigVal, eigVec)
+            self.layers[n].eigVal, self.layers[n].eigVec = eigVal, eigVec
             if (DEBUG):
                 Av = np.multiply(self.maxwell[n], np.transpose(eigVec))
                 lambdaV = np.multiply(eigVal, np.transpose(eigVec))
@@ -359,10 +356,56 @@ class Structure:
         for layer in self.layers:
             mode = np.zeros((1,4), dtype=complex)
             for n in range(4):
-                mode += np.multiply(np.multiply(np.real(layer.eigVec[n]), np.exp(np.real(layer.eigVal[n]))), layer.length)
+                mode += np.multiply(np.multiply(np.real(layer.eigVec[n]), np.exp(layer.eigVal[n])), layer.length)
+            for i in range(len(layer.eigVal)):
+                if isNumZero(layer.eigVal[i].real):
+                    layer.eigVal[i] = complex(0, layer.eigVal[i].imag)
+                elif isNumZero(layer.eigVal[i].imag):
+                    layer.eigVal[i] = complex(layer.eigVal[i].real, 0)
             layer.modes = mode
             if (DEBUG):
                 print(str(layer.name) + ' Modes:\nc*' + str(layer.modes))
+    
+    def selectModes(self):
+        print("Modes incoming from the left: " + str(self.layers[0].eigVal))
+        i = int(input("Please Select your first mode (1-4)"))
+        j = int(input("Please Select your second mode (1-4)"))
+        temp = self.layers[0].eigVal[i - 1]
+        tempVec = self.layers[0].eigVec[i - 1]
+        self.layers[0].eigVal[i - 1] = self.layers[0].eigVal[0]
+        self.layers[0].eigVec[i - 1] = self.layers[0].eigVec[0]
+        self.layers[0].eigVal[0] = temp
+        self.layers[0].eigVec[0] = tempVec
+        if j == 1:
+            j == i
+        temp = self.layers[0].eigVal[j - 1]
+        tempVec = self.layers[0].eigVec[j - 1]
+        self.layers[0].eigVal[j - 1] = self.layers[0].eigVal[1]
+        self.layers[0].eigVec[j - 1] = self.layers[0].eigVec[1]
+        self.layers[0].eigVal[1] = temp
+        self.layers[0].eigVec[1] = tempVec
+
+        print("Reordered Modes: " + str(self.layers[0].eigVal))
+
+        print("Modes incoming from the right: " + str(self.layers[-1].eigVal))
+        i = int(input("Please Select your first mode (1-4)"))
+        j = int(input("Please Select your second mode (1-4)"))
+        temp = self.layers[-1].eigVal[i - 1]
+        tempVec = self.layers[-1].eigVec[i - 1]
+        self.layers[-1].eigVal[i - 1] = self.layers[-1].eigVal[2]
+        self.layers[-1].eigVec[i - 1] = self.layers[-1].eigVec[2]
+        self.layers[-1].eigVal[2] = temp
+        self.layers[-1].eigVec[2] = tempVec
+        if j == 1:
+            j == i
+        temp = self.layers[-1].eigVal[j - 1]
+        tempVec = self.layers[-1].eigVec[j - 1]
+        self.layers[-1].eigVal[j - 1] = self.layers[-1].eigVal[3]
+        self.layers[-1].eigVec[j - 1] = self.layers[-1].eigVec[3]
+        self.layers[-1].eigVal[3] = temp
+        self.layers[-1].eigVec[3] = tempVec
+
+        print("Reordered Modes: " + str(self.layers[-1].eigVal))
 
     def interfaces(self):
         interfaces = []
@@ -495,6 +538,7 @@ class Structure:
         c[4*layers-1] = c4
         for i in range(4*interfaces):
             c[i+2] = cPrime[i]
+        print("CONSTANTS: " + str(c))
         # print(c)
         # The following is code in mathematica that is currently missing
         # c = np.zeros((layers,4), dtype=complex)
@@ -696,8 +740,9 @@ def test():
     s.printMaxwell()
     s.calcEig()
     s.calcModes()
-    c1 = 0
-    c2 = 1
+    s.selectModes()
+    c1 = 1
+    c2 = 0
     c3 = 0
     c4 = 0
     s.calcConstants(c1,c2,c3,c4)
