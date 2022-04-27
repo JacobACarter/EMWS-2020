@@ -368,6 +368,7 @@ class Structure:
     
     def selectModes(self):
         print("Modes incoming from the left: " + str(self.layers[0].eigVal))
+        print(self.layers[0].eigVal[1])
         i = int(input("Please Select your first mode (1-4)"))
         j = int(input("Please Select your second mode (1-4)"))
         temp = self.layers[0].eigVal[i - 1]
@@ -416,7 +417,7 @@ class Structure:
             interfaces.append(interfaces[i] + self.layers[i].getLength())
         return interfaces
 
-
+    #s and b not correct according to mathmateca, checked left and right psi and found issues...
     def calcScattering(self):
         # if (not DEBUG):
             # self.debugEigV()
@@ -458,6 +459,16 @@ class Structure:
                 print(expVecRight)
             leftPsi[i] = np.dot(self.layers[i].eigVec, np.diag(expVecLeft))
             rightPsi[i] = np.dot(self.layers[i+1].eigVec, np.diag(expVecRight))
+            print("Layer " + str(i) + " EigVec")
+            print(self.layers[i].eigVec)
+        print(self.layers[2].eigVec)
+        #************************************************************************
+        #Real And Imaginary Being Switched for left and right psi, not sure why!
+        #************************************************************************
+        # print("LestPhi:")
+        # print(leftPsi)
+        # print("rightPsi:")
+        # print(rightPsi)
         if(DEBUG):
             print('leftPsi: ')
             print(leftPsi)
@@ -526,6 +537,10 @@ class Structure:
         #     f[4*(interfaces-1)+i] = f[4*(interfaces-1)+i] - scattering[4*(interfaces-1)+i][4*(interfaces+1)-1]*c3 - scattering[4*(interfaces-1)+i][4*(interfaces+1)-1]*c4
         # b is ff in mathematica code
         # s is ss in mathematica code
+        print('b')
+        print(b)
+        print('s')
+        print(s)
         if(DEBUG):
             print('b')
             print(b)
