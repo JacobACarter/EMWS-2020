@@ -35,6 +35,9 @@ mEE = [ee1, ee2, ee1]
 # cc2 = np.array([complex(-.164197,-.0712676), complex(-.709687, -1.02698), complex(.104261, -.0952632), complex(-.27917, -.0752636)])
 # cc3 = np.array([complex(.520079,.352919), complex(.0842069, .179057), complex(0,0), complex(0,0)])
 
+
+# Code in lines 39-161 are helper functions used in calculations later on
+
 def calcFactors(pyV, pyVals):
     print('Factors:')
     ratios = []
@@ -194,6 +197,10 @@ class Structure:
             #test method
             #loadDefaults(self)
 
+
+
+
+        # some more helper functions - used to get Eigenvalues/Eigenvectors, Epsilon/Mu matrices, and the length of layer
         def __str__(self):
             try:
                 return self.name + ': ' + str(self.length) + '\nEigen: ' + self.eigVal + self.eigVec
@@ -350,6 +357,9 @@ class Structure:
             self.layers[n].eigVal = e_vals[n]
             self.layers[n].eigVec = e_vecs[n]
 
+
+    # calculates the modes for each layer- can think of this as a trajectory of the system or the waves as they enter each layer
+    # math: mode = eigvec * e ^ (i * eigenvalue)
     def calcModes(self):
         if (DEBUG):
             print('\nCalculating Modes')
@@ -365,7 +375,10 @@ class Structure:
             layer.modes = mode
             if (DEBUG):
                 print(str(layer.name) + ' Modes:\nc*' + str(layer.modes))
-    
+
+    # method for reordering modes for first and last layer 
+    # order of selection should usually be: 4, 2, 1,3 
+    # this accounts for the selecting of modes in the GUI 
     def selectModes(self):
         print("Modes incoming from the left: " + str(self.layers[0].eigVal))
         print(self.layers[0].eigVal[1])
@@ -408,6 +421,8 @@ class Structure:
 
         print("Reordered Modes: " + str(self.layers[-1].eigVal))
 
+
+    #determines where the interfaces between the layers are
     def interfaces(self):
         interfaces = []
         print("Interface")
@@ -575,6 +590,8 @@ class Structure:
         # print(cs == b)
         return c
     
+
+    # not used anymore, old method of calculating the field, mostly here for reference
     def determineFieldAtSpecificPointInLayer(self, z, layer):
         z_ends = self.interfaces()
         interfaces = [0] * self.num
@@ -595,6 +612,8 @@ class Structure:
         fieldVec = np.matmul(expMat, current_c)
         return fieldVec
     
+    # current method for calculating the field 
+    # based on mathematica calculations 
     def determineField(self, omega, k1, k2, num_points=400):
             print("Determine Field:")
             self.omega = omega 
@@ -713,11 +732,15 @@ class Structure:
                 'B2': B2,
                 'B3': B3
             }
-            print(Ex)
+            f = open('output.txt', 'a')
+            print(field, file = f)
+            f.close()
 
 
+# test method to run everything in the document as you would on the gui 
 def test():
     print('Starting Test:')
+    # can define parameters for all of the variables here
     size = 3
     omega = 0.398
     k1 = 0.5
@@ -736,16 +759,18 @@ def test():
                 [0,4,0],
                 [0,0,1]])
 
-
+    # build out all three layers and pass in their epsilon and mu matrices 
     s.addLayer('Ambient Left', 15, e, u)
     s.addLayer('Layer 1', 7, e, u)
     s.addLayer('Ambient Right', 15, e, u)
     #s.addLayer('Ambient Right', 7, e, u)
     s.printLayers()
+    # remove and insert the second layer 
     s.removeLayer(1)
     s.printLayers()
     s.insertLayer('Layer 1', 7, ee, uu, 1)
     s.printLayers()
+    # build out the maxwell matrix
     m = s.buildMatrices()
     print('Number of Layers: ' + str(len(m)))
     print('Dimension of 1st layer Maxwell: ' + str(m[0].shape))
@@ -753,14 +778,18 @@ def test():
     print('Dimension of 3rd layer Maxwell: ' + str(m[2].shape))
     print(s)
     s.printMaxwell()
+    #calculate eigenvalues and modes
     s.calcEig()
     s.calcModes()
+    # reorder the modes and define coeffecients
     s.selectModes()
     c1 = 1
     c2 = 0
     c3 = 0
     c4 = 0
+    # use previously defined coeffecients to calculate constants
     s.calcConstants(c1,c2,c3,c4)
+    # calculate field values for E1-E3, H1-H3, B1-B3, D1-D3
     s.determineField(omega, k1, k2)
 #    s.calcFields(e, ee, u, uu, k1, k2)
 #    s.fields(e, ee, u, uu)
