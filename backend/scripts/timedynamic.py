@@ -1,8 +1,11 @@
+from this import d
+from turtle import left
 import numpy as np
 from numpy.core.numerictypes import ScalarType
 from numpy.lib.function_base import append
 from numpy.linalg import eig
 from scipy.linalg import solve
+from scipy.linalg import eig as eigen
 import json
 
 DEBUG = False
@@ -193,7 +196,7 @@ class Structure:
             self.mu = mu
             self.solution = np.zeros(4, dtype=complex)
             self.eigVec = [np.zeros((4,1), dtype=complex)] * 4
-            self.eigVal = [np.zeros(4)]
+            self.eigVal = [np.zeros(4, dtype=complex)]
             #test method
             #loadDefaults(self)
 
@@ -303,7 +306,8 @@ class Structure:
             if (DEBUG):
                 print('Maxwells :', maxwell_matrix)
         self.maxwell = maxwell_matrices
-        return maxwell_matrices
+        print('matrix')
+        print(maxwell_matrices)
 
     # Import maxwell matrices into struct
     def importMatrices(self, matrices):
@@ -312,6 +316,7 @@ class Structure:
         self.maxwell = matrices
 
     def printMaxwell(self):
+
         print('Maxwells:')
         for m in self.maxwell:
             print(m)
@@ -324,26 +329,39 @@ class Structure:
             if (DEBUG):
                 print('For layer ' + str(n+1))
             #start = time.perf_counter()
-            eigVal, eigVec = np.linalg.eig(self.maxwell[n])
-            # eigVal, eigVec = eig(self.maxwell[n])[0], eig(self.maxwell[n])[1]
-            # print(eigVal, eigVec)
-            # for i in range(4):
-            #     self.layers[n].eigVec[i] = np.transpose(eigVec[i])
-            self.layers[n].eigVal, self.layers[n].eigVec = eigVal, eigVec
-            if (DEBUG):
-                Av = np.multiply(self.maxwell[n], np.transpose(eigVec))
-                lambdaV = np.multiply(eigVal, np.transpose(eigVec))
-                print('LAYER ', n)
-                print('Av: ', Av)
-                print('lambda v: ', lambdaV)
-                print('Av = lambda v: ', Av == lambdaV)
-            #eigVal, eigVec = organizeEigen(eigVal, eigVec)
-            #end = time.perf_counter()
-            #print(f'Time to calculate Eigensystem: {end-start:0.5f} seconds')
-            if (DEBUG):
-                print(f'Values:\n{self.layers[n].eigVal}')
-            if (DEBUG):
-                print(f'Vectors:\n{self.layers[n].eigVec}')
+            # print('maxwell matrix')
+            # print(self.maxwell)
+            self.layers[n].eigVal, self.layers[n].eigVec = eig(self.maxwell[n])
+
+        print('layer 2 eigenvalues')
+        print(self.layers[1].eigVal)
+        print('layer 3 eigenvalues')
+        print(self.layers[2].eigVal)
+            # # print(eigVal, eigVec)
+            # for i in range(3):
+            #     f = open('test.txt', 'a')
+            #     res = np.dot(self.maxwell[i], self.layers[n].eigVec) - np.dot(self.layers[n].eigVec, np.diag(self.layers[n].eigVal))
+            #     print('layer: ' + str(i + 1), file = f)
+            #     print(res, file = f)
+            #     f.close()
+            # self.layers[n].eigVal, self.layers[n].eigVec = eigVal, eigVec
+            # if (DEBUG):
+                # Av = np.multiply(self.maxwell[n], np.transpose(eigVec))
+                # lambdaV = np.multiply(eigVal, np.transpose(eigVec))
+                # print('LAYER ', n)
+                # print('Av: ', Av)
+                # print('lambda v: ', lambdaV)
+                # print('Av - lambda v: ', Av - lambdaV)
+            # #eigVal, eigVec = organizeEigen(eigVal, eigVec)
+            # #end = time.perf_counter()
+            # #print(f'Time to calculate Eigensystem: {end-start:0.5f} seconds')
+            # if (DEBUG):
+            #     print(f'Values:\n{self.layers[n].eigVal}')
+            # if (DEBUG):
+            #     print(f'Vectors:\n{self.layers[n].eigVec}')
+            # print('layer ' + str(n + 1))
+            # print('evecs :')
+            # print(self.layers[n].eigVec)
 
     # Import preexisting eigendata
     def importEig(self, e_vals, e_vecs):
@@ -379,47 +397,180 @@ class Structure:
     # method for reordering modes for first and last layer 
     # order of selection should usually be: 4, 2, 1,3 
     # this accounts for the selecting of modes in the GUI 
-    def selectModes(self):
-        print("Modes incoming from the left: " + str(self.layers[0].eigVal))
-        print(self.layers[0].eigVal[1])
-        i = int(input("Please Select your first mode (1-4)"))
-        j = int(input("Please Select your second mode (1-4)"))
-        temp = self.layers[0].eigVal[i - 1]
-        tempVec = self.layers[0].eigVec[i - 1]
-        self.layers[0].eigVal[i - 1] = self.layers[0].eigVal[0]
-        self.layers[0].eigVec[i - 1] = self.layers[0].eigVec[0]
-        self.layers[0].eigVal[0] = temp
-        self.layers[0].eigVec[0] = tempVec
-        if j == 1:
-            j == i
-        temp = self.layers[0].eigVal[j - 1]
-        tempVec = self.layers[0].eigVec[j - 1]
-        self.layers[0].eigVal[j - 1] = self.layers[0].eigVal[1]
-        self.layers[0].eigVec[j - 1] = self.layers[0].eigVec[1]
-        self.layers[0].eigVal[1] = temp
-        self.layers[0].eigVec[1] = tempVec
+    # def selectModes(self):
+    #     f = open('output.txt', 'a')
+    #     print("original eigenvectors for layer 1 " + str(self.layers[0].eigVal), file = f)
+    #     print("original eigenvectors for layer 2" + str(self.layers[1].eigVal), file = f)
+    #     print("original eigenvectors for layer 3" + str(self.layers[2].eigVal), file = f)
+    #     i = int(input("Please Select your first mode (1-4)"))
+    #     j = int(input("Please Select your second mode (1-4)"))
+ 
+    #     temp = self.layers[0].eigVal[i - 1]
+    #     tempVec = self.layers[0].eigVec[i - 1]
+    #     self.layers[0].eigVal[i - 1] = self.layers[0].eigVal[0]
+    #     self.layers[0].eigVec[i - 1] = self.layers[0].eigVec[0]
+    #     self.layers[0].eigVal[0] = temp
+    #     self.layers[0].eigVec[0] = tempVec
+    #     if j == 1:
+    #         j == i
+    #     temp = self.layers[0].eigVal[j - 1]
+    #     tempVec = self.layers[0].eigVec[j - 1]
+    #     self.layers[0].eigVal[j - 1] = self.layers[0].eigVal[1]
+    #     self.layers[0].eigVec[j - 1] = self.layers[0].eigVec[1]
+    #     self.layers[0].eigVal[1] = temp
+    #     self.layers[0].eigVec[1] = tempVec
 
-        print("Reordered Modes: " + str(self.layers[0].eigVal))
+    #     print("Reordered Modes: " + str(self.layers[0].eigVal))
 
-        print("Modes incoming from the right: " + str(self.layers[-1].eigVal))
-        i = int(input("Please Select your first mode (1-4)"))
-        j = int(input("Please Select your second mode (1-4)"))
-        temp = self.layers[-1].eigVal[i - 1]
-        tempVec = self.layers[-1].eigVec[i - 1]
-        self.layers[-1].eigVal[i - 1] = self.layers[-1].eigVal[2]
-        self.layers[-1].eigVec[i - 1] = self.layers[-1].eigVec[2]
-        self.layers[-1].eigVal[2] = temp
-        self.layers[-1].eigVec[2] = tempVec
-        if j == 1:
-            j == i
-        temp = self.layers[-1].eigVal[j - 1]
-        tempVec = self.layers[-1].eigVec[j - 1]
-        self.layers[-1].eigVal[j - 1] = self.layers[-1].eigVal[3]
-        self.layers[-1].eigVec[j - 1] = self.layers[-1].eigVec[3]
-        self.layers[-1].eigVal[3] = temp
-        self.layers[-1].eigVec[3] = tempVec
+    #     print("Modes incoming from the right: " + str(self.layers[-1].eigVal))
+    #     i = int(input("Please Select your first mode (1-4)"))
+    #     j = int(input("Please Select your second mode (1-4)"))
+    #     temp = self.layers[-1].eigVal[i - 1]
+    #     tempVec = self.layers[-1].eigVec[i - 1]
+    #     self.layers[-1].eigVal[i - 1] = self.layers[-1].eigVal[2]
+    #     self.layers[-1].eigVec[i - 1] = self.layers[-1].eigVec[2]
+    #     self.layers[-1].eigVal[2] = temp
+    #     self.layers[-1].eigVec[2] = tempVec
+    #     if j == 1:
+    #         j == i
+    #     temp = self.layers[-1].eigVal[j - 1]
+    #     tempVec = self.layers[-1].eigVec[j - 1]
+    #     self.layers[-1].eigVal[j - 1] = self.layers[-1].eigVal[3]
+    #     self.layers[-1].eigVec[j - 1] = self.layers[-1].eigVec[3]
+    #     self.layers[-1].eigVal[3] = temp
+    #     self.layers[-1].eigVec[3] = tempVec
+    #     print("Reordered Modes for layer 1: " + str(self.layers[0].eigVal), file= f)
+    #     print("Reordered Modes for layer 2: " + str(self.layers[1].eigVal), file= f)
+    #     print("Reordered Modes for layer 3: " + str(self.layers[2].eigVal), file= f)
+    #     f.close()
 
-        print("Reordered Modes: " + str(self.layers[-1].eigVal))
+
+
+
+    def reorder(self): 
+
+
+        # establish temp row vector of four zeroes 
+        temparray = [np.zeros((4,1), dtype=complex)] * 4
+
+        tempVal = np.zeros(4, dtype=complex)
+
+
+
+
+        # print(' eigenvalues before reorder (first layer)', self.layers[0].eigVal, file = f)
+        # print(' eigenvalues before reorder (third layer)', self.layers[2].eigVal, file = f)
+
+        # # apply manipulation to first layer 
+
+        # for i in range(3):
+        #         print('pre processing')
+        #         print('eigenVectors for layer: ' + str(i + 1))
+        #         # print(self.layers[i].eigVal)
+        #         print(self.layers[i].eigVec)
+
+
+
+        ##LAYER 1 REORDER FOR EIGENVALUES
+
+        tempVal[0] = self.layers[0].eigVal[3]
+        tempVal[1] = self.layers[0].eigVal[2]
+        tempVal[2] = self.layers[0].eigVal[0]
+        tempVal[3] = self.layers[0].eigVal[1]
+        
+        self.layers[0].eigVal = tempVal
+
+
+        ##LAYER 2 REORDER FOR EIGENVALUES 
+        tempVal = np.zeros(4, dtype=complex)
+        tempVal[0] = self.layers[1].eigVal[0]
+        tempVal[1] = self.layers[1].eigVal[2]
+        tempVal[2] = self.layers[1].eigVal[1]
+        tempVal[3] = self.layers[1].eigVal[3]
+        
+        self.layers[1].eigVal = tempVal
+
+
+        ##LAYER 3 REORDER FOR EIGENVALUES
+        tempVal = np.zeros(4, dtype=complex)
+        tempVal[0] = self.layers[2].eigVal[3]
+        tempVal[1] = self.layers[2].eigVal[2]
+        tempVal[2] = self.layers[2].eigVal[0]
+        tempVal[3] = self.layers[2].eigVal[1]
+        
+        self.layers[2].eigVal = tempVal
+
+
+
+        #### REORDERING DO NOT DELETE 
+        tempVec = np.zeros(shape=(4,4), dtype=complex) 
+
+
+        for i in range(4):
+            for j in range(4):
+                tempVec[i][j] = self.layers[0].eigVec[i][j]
+
+
+        tempVec[i,0] = self.layers[0].eigVec[i, 0] 
+        tempVec[i][1] = self.layers[0].eigVec[i][2] 
+        tempVec[i][2] = self.layers[0].eigVec[i][3] 
+        tempVec[i][3] = self.layers[0].eigVec[i][1] 
+
+
+        self.layers[0].eigVec = tempVec
+
+        print('reordered eigenvectors')
+        print(self.layers[0].eigVec)
+
+        # print('postordering', file = f)
+        # print(self.layers[0].eigVec, file = f)
+
+        # print('correspondence test', file = f)
+        # print(np.dot(self.maxwell[0], self.layers[0].eigVec) - np.dot(np.diag(self.layers[0].eigVal), self.layers[0].eigVec), file = f)
+        # #     for j in range(4): 
+
+        #         temparray[i][j] = -complex(0, 1) * self.layers[0].eigVec[i][j]
+        #         temparray[i][j] = -complex(0, 1) * self.layers[2].eigVec[i][j]
+
+        # self.layers[0].eigVec = temparray
+        # self.layers[2].eigVec = temparray
+
+
+        # print('checking eigensystem')
+        # check = np.dot( self.maxwell[0], self.layers[0].eigVec ) - np.dot(self.layers[0].eigVec, np.diag(self.layers[0].eigVal))
+
+        # we need to reorder the eigenvectors so the lists are gonna be multiplied in the same way as the eigenvalues, should only be the third layer 
+
+        # # #apply reordering logic to third layer 
+        # tempVal[0] = self.layers[2].eigVal[0]
+        # tempVal[1] = self.layers[2].eigVal[1]
+        # tempVal[2] = self.layers[2].eigVal[3]
+        # tempVal[3] = self.layers[2].eigVal[2]
+        # # # rewrite eigVal for second layer
+        # self.layers[2].eigVal = tempVal
+
+
+        # for i in range(3):
+        #     print('post processing')
+        #     print('eigensystem for layer: ' + str(i + 1))
+        #     print(self.layers[i].eigVec)
+
+
+
+        # f = open('jacob.txt', 'a')
+        # print('post reordering', file = f)
+        # for i in range(3):
+        #     res = np.dot(self.maxwell[i], self.layers[i].eigVec) - np.dot(self.layers[i].eigVec, np.diag(self.layers[i].eigVal))
+        #     print('layer: ' + str(i + 1), file = f)
+        #     print(res, file = f)
+
+
+
+    
+
+
+
+
 
 
     #determines where the interfaces between the layers are
@@ -432,7 +583,7 @@ class Structure:
             interfaces.append(interfaces[i] + self.layers[i].getLength())
         return interfaces
 
-    #s and b not correct according to mathmateca, checked left and right psi and found issues...
+    #s and b not correct according to mathmatica, checked left and right psi and found issues...
     def calcScattering(self):
         # if (not DEBUG):
             # self.debugEigV()
@@ -442,13 +593,17 @@ class Structure:
         references = np.zeros(layers)   # zref
         ifaces = self.interfaces()      # zzz
         interfaces = np.zeros(I)        # zz
-        leftPsi = [np.zeros(4)] * I
-        rightPsi = [np.zeros(4)] * I
+        leftPsi = [np.zeros(4, dtype=complex)] * I
+        rightPsi = [np.zeros(4, dtype= complex)] * I
+        testarray = np.array(leftPsi)
+        print('shape of array:')
+        print(testarray.shape)
         # Calculate the reference points
         for i in range(layers):
             # The first layer reference point is the right endpoint
             if i < 2:
                 references[i] = 0
+                print(i)
             # Calculate the rest of the reference points, the left endpoint
             else:
                 references[i] = (ifaces[i] - ifaces[i-1])
@@ -467,61 +622,65 @@ class Structure:
         for i in range(I):
             expVecLeft = np.exp((self.layers[i].eigVal * (interfaces[i] - references[i])))
             expVecRight = np.exp((self.layers[i+1].eigVal * (interfaces[i] - references[i+1])))
-            if(DEBUG):
-                print('expVecLeft:')
-                print(expVecLeft)
-                print('expVecRight:')
-                print(expVecRight)
             leftPsi[i] = np.dot(self.layers[i].eigVec, np.diag(expVecLeft))
             rightPsi[i] = np.dot(self.layers[i+1].eigVec, np.diag(expVecRight))
             print("Layer " + str(i) + " EigVec")
             print(self.layers[i].eigVec)
-        print(self.layers[2].eigVec)
+        # print(self.layers[2].eigVec)
         #************************************************************************
         #Real And Imaginary Being Switched for left and right psi, not sure why!
         #************************************************************************
-        # print("LestPhi:")
-        # print(leftPsi)
-        # print("rightPsi:")
-        # print(rightPsi)
-        if(DEBUG):
-            print('leftPsi: ')
-            print(leftPsi)
-            print('rightPsi: ')
-            print(rightPsi)
-        for inter in range_at_1(I):
-            for i in range_at_1(4):
-                for j in range_at_1(4):
-                    vali = (4 * (inter - 1) + i) - 1
-                    valj = (4 * (inter - 1) + j) - 1
-                    valj2 = 4 * inter + j - 1
-                    # print('indices: ')
-                    # print(vali, valj)
-                    # print(vali, valj2)
-                    s[vali][valj] = leftPsi[inter-1].item(i-1,j-1)
-                    s[vali][valj2] = np.negative(rightPsi[inter-1].item(i-1,j-1))
+        f = open('output.txt', 'a')
+        print('expVecLeft:', file = f)
+        print(np.diag(expVecLeft), file = f)
+        print('expVecRight:', file = f)
+        print(np.diag(expVecRight), file = f)
+        # print("LeftPsi:", file = f)
+        # print(leftPsi, file = f)
+        # print("rightPsi:", file = f)
+        # print(rightPsi, file = f)
+        f.close()
+        # if(DEBUG):
+        #     print('leftPsi: ')
+        #     print(leftPsi)
+        #     print('rightPsi: ')
+        #     print(rightPsi)
+        # for inter in range_at_1(I):
+        #     for i in range_at_1(4):
+        #         for j in range_at_1(4):
+        #             vali = (4 * (inter - 1) + i) - 1
+        #             valj = (4 * (inter - 1) + j) - 1
+        #             valj2 = 4 * inter + j - 1
+        #             # print('indices: ')
+        #             # print(vali, valj)
+        #             # print(vali, valj2)
+        #             s[vali][valj] = leftPsi[inter-1].item(i-1,j-1)
+        #             s[vali][valj2] = np.negative(rightPsi[inter-1].item(i-1,j-1))
         # s = s.transpose()
         # for inter in range(I):
         #     for i in range(4):
         #         for j in range(4):
         #             s[4*inter+i][4*inter+j] = leftPsi[inter].item(i,j)
         #             s[4*inter+i][4*(inter+1)+j] = -rightPsi[inter].item(i,j)
-                    # s[4*(inter-1)+(i)-1][4*(inter-1)+(j)-1] = leftPsi[inter].item(i,j)
-                    # s[4*(inter-1)+(i)-1][4*(inter)+(j)-1] = -rightPsi[inter].item(i,j)
-        if(DEBUG):
-            print('Scattering matrix')
-            print(s.shape)
-            print(s[0:4])
-            print(s[4:8])
-            # print(s)
-            print("\n")
-        self.scattering = s
-        return s
+        #             s[4*(inter-1)+(i)-1][4*(inter-1)+(j)-1] = leftPsi[inter].item(i,j)
+        #             s[4*(inter-1)+(i)-1][4*(inter)+(j)-1] = -rightPsi[inter].item(i,j)
+        # if(DEBUG):
+        #     print('Scattering matrix')
+        #     print(s.shape)
+        #     print(s[0:4])
+        #     print(s[4:8])
+        #     # print(s)
+        #     print("\n")
+        # self.scattering = s
+        # return s
     
 
     # Calculate the constants for each layer to be used in the fields/solutions
     def calcConstants(self, c1, c2, c3, c4):
         scattering = self.calcScattering()
+        f = open('output.txt', 'a')
+        print('scattering matrix', scattering, file = f)
+        f.close()
         layers = self.num
         interfaces = layers-1
         s = np.zeros((4*interfaces,4*interfaces), dtype=complex)
@@ -591,7 +750,7 @@ class Structure:
         return c
     
 
-    # not used anymore, old method of calculating the field, mostly here for reference
+    # not used anymore, old method of calculating the fieldvector - E1, E2, H1, H2, mostly here for reference
     def determineFieldAtSpecificPointInLayer(self, z, layer):
         z_ends = self.interfaces()
         interfaces = [0] * self.num
@@ -763,7 +922,6 @@ def test():
     s.addLayer('Ambient Left', 15, e, u)
     s.addLayer('Layer 1', 7, e, u)
     s.addLayer('Ambient Right', 15, e, u)
-    #s.addLayer('Ambient Right', 7, e, u)
     s.printLayers()
     # remove and insert the second layer 
     s.removeLayer(1)
@@ -772,25 +930,26 @@ def test():
     s.printLayers()
     # build out the maxwell matrix
     m = s.buildMatrices()
-    print('Number of Layers: ' + str(len(m)))
-    print('Dimension of 1st layer Maxwell: ' + str(m[0].shape))
-    print('Dimension of 2nd layer Maxwell: ' + str(m[1].shape))
-    print('Dimension of 3rd layer Maxwell: ' + str(m[2].shape))
-    print(s)
-    s.printMaxwell()
-    #calculate eigenvalues and modes
+    # print('Number of Layers: ' + str(len(m)))
+    # print('Dimension of 1st layer Maxwell: ' + str(m[0].shape))
+    # print('Dimension of 2nd layer Maxwell: ' + str(m[1].shape))
+    # print('Dimension of 3rd layer Maxwell: ' + str(m[2].shape))
+    # print(s)
+    # s.printMaxwell()
+    # #calculate eigenvalues and modes from the maxwell matrix 
     s.calcEig()
-    s.calcModes()
-    # reorder the modes and define coeffecients
-    s.selectModes()
-    c1 = 1
-    c2 = 0
-    c3 = 0
-    c4 = 0
-    # use previously defined coeffecients to calculate constants
-    s.calcConstants(c1,c2,c3,c4)
+    s.reorder()
+    # s.calcModes()
+    # # reorder the modes/eigenvalues and define coeffecients
+    # c1 = 1
+    # c2 = 0
+    # c3 = 0
+    # c4 = 0
+    # # # use previously defined coeffecients to calculate constants
+    # # s.calcConstants(c1, c2, c3, c4)
+    # s.calcScattering()
     # calculate field values for E1-E3, H1-H3, B1-B3, D1-D3
-    s.determineField(omega, k1, k2)
+    # s.determineField(omega, k1, k2)
 #    s.calcFields(e, ee, u, uu, k1, k2)
 #    s.fields(e, ee, u, uu)
 
