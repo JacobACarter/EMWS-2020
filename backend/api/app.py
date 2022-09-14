@@ -4,16 +4,18 @@ from flask import json
 import numpy as np
 from flask_cors import CORS, cross_origin
 import sys
-sys.path.append('/home/EMWS/EMWS-2020/backend')
-from scripts.scattering import Structure as s
+sys.path.append('/Users/joelkeller/EMWS/EMWS-2020/backend')
+from timedynamic import Structure as s
 
 
 # Run server by calling python app.py
 app = Flask(__name__)
 # List of accepted origins
-origins = ["http://localhost:8000", "https://www.math.lsu.edu"]
+origins = ["http://localhost:8000",
+"https://www.math.lsu.edu"
+]
 # Change origins to '*' if this solution gives issues
-CORS(app, resources={r"/structure": {"origins": origins}})
+CORS(app, resources={r"/structure": {"origins": '*'}})
 
 # Greeting message, currently unused
 base =  '''
@@ -331,10 +333,8 @@ def field():
         struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
         data['scattering'] = encode_scattering(struct.scattering)
         data['constants'] = encode_constants(struct.constants)
-        field = struct.determineField(num_points)
+        field = struct.determineField(omega, k1, k2, num_points)
     data['field'] = field
-
-    # print('Field route completed')
 
     return json.jsonify(data)
 

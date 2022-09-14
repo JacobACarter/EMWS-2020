@@ -8,7 +8,7 @@
 var backendAPI = backendAPI || {};
 
 // If you want to use a localhost, just change to "http://localhost:5000/""
-const API_HOST = "https://emws.pythonanywhere.com/"
+const API_HOST = "http://localhost:5000/"
 
 /** Performs a request to a specific route on the given API host */
 const request = async (route, body, request_type="POST", content_type="application/json") => {

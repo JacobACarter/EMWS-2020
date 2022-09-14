@@ -60,8 +60,10 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   $scope.dispersion;
   $scope.EX = 'Eₓ';                                                       //Label for Ex
   $scope.EY = 'Eᵧ';                                                       //Label for Ey
+  $scope.EZ = 'Ez';                                                       //Label for Ez
   $scope.HX = 'Hₓ';                                                       //Label for Hx
   $scope.HY = 'Hᵧ';                                                       //Label for Hy
+  $scope.HZ = 'Hz';                                                       //Label for Hz
   $scope.expRunning = false;
 
 
@@ -578,12 +580,15 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     if(!fieldData) return
 
     var data = new google.visualization.DataTable();            //Creates a data table
-    data.addColumn('number', 'z');                              //Adds z column to data table
+    data.addColumn('number', $scope.z);                              //Adds z column to data table
     //data.addColumn('number', document.getElementById("shownVal").value);
     data.addColumn('number', $scope.EX);                        //Adds Ex column to data table
     data.addColumn('number', $scope.EY);                        //Adds Ey column to data table
+    data.addColumn('number', $scope.EZ);                        //Adds Ez column to data table
     data.addColumn('number', $scope.HX);                        //Adds Hx column to data table
     data.addColumn('number', $scope.HY);                        //Adds Hy column to data table
+    data.addColumn('number', $scope.HZ);                        //Adds Hz column to data table
+
 
     //Iterate through fields values
     for (var i = 0, N = fieldData.z.length; i < N; i++) {
@@ -594,7 +599,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
 
       //NEW CODE
       data.addRows([
-        [fieldData.z[i], fieldData.Ex[i], fieldData.Ey[i], fieldData.Hx[i], fieldData.Hy[i]]
+        [fieldData.z[i], fieldData.Ex[i], fieldData.Ey[i], fieldData.Ez[i], fieldData.Hx[i], fieldData.Hy[i], fieldData.Hz[i]]
     ]);
     }
 
@@ -663,7 +668,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     //Chart Options
     var options = {
       chart: {
-        title: 'Ex, Ey, Hx, and Hy Values in Relation to Z'
+        title: 'Ex, Ey, Ez, Hx, Hy, and Hz Values in Relation to Z'
       },
       hAxis: {
         gridlines: {
@@ -684,7 +689,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
         top: 40
       },
       backgroundColor: 'transparent',
-      colors: ["red", "orange", "blue", "green"]
+      colors: ["red", "orange", "blue", "green", "purple", "yellow"]
     };
 
     chart.draw(data, options);          //Draw the chart
