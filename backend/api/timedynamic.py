@@ -749,27 +749,22 @@ def test():
     s.printLayers()
     # build out the maxwell matrix
     m = s.buildMatrices()
-    # print('Number of Layers: ' + str(len(m)))
-    # print('Dimension of 1st layer Maxwell: ' + str(m[0].shape))
-    # print('Dimension of 2nd layer Maxwell: ' + str(m[1].shape))
-    # print('Dimension of 3rd layer Maxwell: ' + str(m[2].shape))
-    # print(s)
-    # s.printMaxwell()
-    # #calculate eigenvalues and modes from the maxwell matrix 
+    s.printMaxwell()
+    #calculate eigenvalues and modes from the maxwell matrix 
     s.calcEig()
-    # # s.reorder()
     s.calcModes()
-    # # reorder the modes/eigenvalues and define coeffecients
-    # c1 = 1
-    # c2 = 0
-    # c3 = 0
-    # c4 = 0
-    # # # # use previously defined coeffecients to calculate constants
-    # s.calcConstants(c1, c2, c3, c4)
-    # s.calcScattering()
+    # reorder the modes/eigenvalues and define coeffecients
+    c1 = 1
+    c2 = 0
+    c3 = 0
+    c4 = 0
+    # use previously defined coeffecients to calculate constants
+    s.calcConstants(c1, c2, c3, c4)
+    # solve scattering problem 
+    s.calcScattering()
     # s.printSol()
-    # # calculate field values for E1-E3, H1-H3, B1-B3, D1-D3
-    # s.determineField(omega, k1, k2)
+    # calculate field values for E1-E3, H1-H3, B1-B3, D1-D3
+    s.determineField(omega, k1, k2)
 
 
 def main():
