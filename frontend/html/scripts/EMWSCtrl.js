@@ -58,11 +58,11 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   $scope.crystal;                                                         //The Photonic Crystal created in emScattering3.js
   $scope.field;                                                           //The field determined using the Photonic Crystal
   $scope.dispersion;
-  $scope.EX = 'Eₓ';                                                       //Label for Ex
-  $scope.EY = 'Eᵧ';                                                       //Label for Ey
+  $scope.EX = 'Ex';                                                       //Label for Ex
+  $scope.EY = 'Ey';                                                       //Label for Ey
   $scope.EZ = 'Ez';                                                       //Label for Ez
-  $scope.HX = 'Hₓ';                                                       //Label for Hx
-  $scope.HY = 'Hᵧ';                                                       //Label for Hy
+  $scope.HX = 'Hx';                                                       //Label for Hx
+  $scope.HY = 'Hy';                                                       //Label for Hy
   $scope.HZ = 'Hz';                                                       //Label for Hz
   $scope.expRunning = false;
 
@@ -463,7 +463,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     getArrays();
     console.log("Updating Structure...")
     await updateAll();
-
+    // console.log('are you seeing this?')
     console.log("Creating charts...")
     createFieldChart();
     createAnim();
@@ -569,13 +569,16 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   function createFieldChart() {
     //OLD CODE
     console.log($scope.crystal);
-    var fields = $scope.field;                                  //Takes field and puts it to a variable
+    var fields = $scope.field;     
+    console.log('first field')                             //Takes field and puts it to a variable
     console.log(fields);
     var interfaces = $scope.crystal.Struct.materialInterfaces();       //Takes interfaces and puts it to a variable
 
     //NEW CODE
     var fieldData = $scope.structure.getField()
-    console.log(fieldData)
+
+    // console.log("look here should be different ------------------------")
+    // console.log(fieldData)
 
     if(!fieldData) return
 
@@ -606,7 +609,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     function printInterfaces(dataTable) { //prints the colored squares on the top of the chart
       var cli = this.getChartLayoutInterface();
       var chartArea = cli.getChartAreaBoundingBox();
-      var cols = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
+      var cols = ["red", "orange", "blue", "green", "purple", "yellow"];
       var oddColors = '#FFFF00';
       var evenColors = '#888888';
       var w = cli.getXLocation(interfaces[1]) - cli.getXLocation(interfaces[0]);
@@ -716,7 +719,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
      */
     $scope.toggleLine = function (id) {
       var columns = chartView.getViewColumns();               //Gets the array of visible columns
-      var fullColorsArr = ["red", "orange", "blue", "green"];
+      var fullColorsArr = ["red", "orange", "blue", "green", "purple", "yellow"];
       var isHidden = true;                                    //Creates flag if column specified is hidden
 
       //Loop through visible columns
@@ -738,8 +741,8 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
 
     /** Resets the columns of the field chart. */
     $scope.resetFieldChart = function () {
-      chartView.setColumns([0, 1, 2, 3, 4]);                  //Reset to show all visible columns
-      options.colors = ["red", "orange", "blue", "green"];  //Reset colors
+      chartView.setColumns([0, 1, 2, 3, 4, 5, 6]);                  //Reset to show all visible columns
+      options.colors = ["red", "orange", "blue", "green", "purple", "yellow"];  //Reset colors
       chart.draw(chartView, options);                         //Draw the updated chart
     }
   }
@@ -851,7 +854,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
       })
 
     // var colorCoords = []; //possibly remove, replace with just applying interfaces to arrays
-    var cols = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
+    var cols = ["red", "orange", "blue", "green", "purple", "yellow"];
     for (var i = 0; i < interfaces.length - 1; i++) {
       var array1 = [ //only x changes on all shapes coordinates
         //seperate 1st and last arrays. also, make each array part of an array[][]                    
