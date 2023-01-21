@@ -306,8 +306,8 @@ class Structure:
             if (DEBUG):
                 print('Maxwells :', maxwell_matrix)
         self.maxwell = maxwell_matrices
-        print('matrix')
-        print(maxwell_matrices)
+        #print('matrix')
+        #print(maxwell_matrices)
 
     # Import maxwell matrices into struct
     def importMatrices(self, matrices):
@@ -348,8 +348,8 @@ class Structure:
                 #eigVal, eigVec = organizeEigen(eigVal, eigVec)
                 #end = time.perf_counter()
                 #print(f'Time to calculate Eigensystem: {end-start:0.5f} seconds')
-                print(f'Values:\n{self.layers[n].eigVal}')
-                print(f'Vectors:\n{self.layers[n].eigVec}')
+                #print(f'Values:\n{self.layers[n].eigVal}')
+                #print(f'Vectors:\n{self.layers[n].eigVec}')
 
 
     # Import preexisting eigendata
@@ -416,10 +416,8 @@ class Structure:
     
     #s and b not correct according to mathmatica, checked left and right psi and found issues...
     # Calculate the scattering matrix to be used in the constants calulation
-       # Calculate the scattering matrix to be used in the constants calulation
+    # Calculate the scattering matrix to be used in the constants calulation
     def calcScattering(self):
-        # if (not DEBUG):
-            # self.debugEigV()
         layers = self.num
         I = layers - 1
         s = np.zeros((4*I,4*layers), dtype=complex)
@@ -429,13 +427,12 @@ class Structure:
         leftPsi = [np.zeros(4)] * I
         rightPsi = [np.zeros(4)] * I
         # Calculate the reference points
-        for i in range(layers):
+        #FIRST AND SECOND LAYER USED TO HAVE SAME REFERENCE POINT, 
+        #NOW ALL LAYERS USE LEFTMOST ENDPOINT
+        references[0] = -self.layers[0].length
+        for i in range(layers - 1):
             # The first layer reference point is the right endpoint
-            if i < 2:
-                references[i] = 0
-            # Calculate the rest of the reference points, the left endpoint
-            else:
-                references[i] = (ifaces[i] - ifaces[i-1])
+            references[i + 1] = ifaces[i+1]
         # Calculate the locations (z-values) of the interfaces
         for i in range(I):
             # First interface is always at 0
@@ -450,7 +447,13 @@ class Structure:
             print(ifaces)
         for i in range(I):
             expVecLeft = np.exp((self.layers[i].eigVal * (interfaces[i] - references[i])))
+            print("interfaces: " + str(interfaces[i]))
+            print("references: " + str(references[i+1]))
             expVecRight = np.exp((self.layers[i+1].eigVal * (interfaces[i] - references[i+1])))
+            print('expvectleft: ')
+            print(expVecLeft)
+            print('expvectRIGHT: ')
+            print(expVecRight)
             if(DEBUG):
                 print('expVecLeft:')
                 print(expVecLeft)
@@ -458,11 +461,11 @@ class Structure:
                 print(expVecRight)
             leftPsi[i] = np.dot(self.layers[i].eigVec, np.diag(expVecLeft))
             rightPsi[i] = np.dot(self.layers[i+1].eigVec, np.diag(expVecRight))
-        if(DEBUG):
-            print('leftPsi: ')
-            print(leftPsi)
-            print('rightPsi: ')
-            print(rightPsi)
+
+        print('leftPsi: ')
+        print(leftPsi)
+        print('rightPsi: ')
+        print(rightPsi)
         for inter in range_at_1(I):
             for i in range_at_1(4):
                 for j in range_at_1(4):
@@ -719,7 +722,7 @@ class Structure:
 def test():
     print('Starting Test:')
     # can define parameters for all of the variables here
-    size = 3
+    size = 4
     omega = 0.398
     k1 = 0.5
     k2 = 0.22
@@ -739,13 +742,14 @@ def test():
 
     # build out all three layers and pass in their epsilon and mu matrices 
     s.addLayer('Ambient Left', 10, e, u)
-    s.addLayer('Layer 1', 7, e, u)
-    s.addLayer('Ambient Right', 10, e, u)
+    s.addLayer('Layer 1', 7, ee, uu)
+    s.addLayer('Layer 2', 7, e, u)
+    s.addLayer('Ambient Right', 10, ee, uu)
     s.printLayers()
     # remove and insert the second layer 
-    s.removeLayer(1)
+    #s.removeLayer(1)
     s.printLayers()
-    s.insertLayer('Layer 1', 7, ee, uu, 1)
+    #s.insertLayer('Layer 1', 7, ee, uu, 1)
     s.printLayers()
     # build out the maxwell matrix
     m = s.buildMatrices()
@@ -761,7 +765,7 @@ def test():
     # use previously defined coeffecients to calculate constants
     s.calcConstants(c1, c2, c3, c4)
     # solve scattering problem 
-    s.calcScattering()
+    #s.calcScattering()
     # s.printSol()
     # calculate field values for E1-E3, H1-H3, B1-B3, D1-D3
     s.determineField(omega, k1, k2)
