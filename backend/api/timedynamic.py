@@ -420,7 +420,7 @@ class Structure:
     def calcScattering(self):
         layers = self.num
         I = layers - 1
-        s = np.zeros((4*I,4*layers), dtype=complex)
+        s = np.zeros((4*I,4*(I + 1)), dtype=complex)
         references = np.zeros(layers)   # zref
         ifaces = self.interfaces()      # zzz
         interfaces = np.zeros(I)        # zz
@@ -429,7 +429,6 @@ class Structure:
         # Calculate the reference points
         #FIRST AND SECOND LAYER USED TO HAVE SAME REFERENCE POINT, 
         #NOW ALL LAYERS USE LEFTMOST ENDPOINT
-        references[0] = -self.layers[0].length
         for i in range(layers - 1):
             # The first layer reference point is the right endpoint
             references[i + 1] = ifaces[i+1]
@@ -445,53 +444,50 @@ class Structure:
             print(interfaces)
             print(references)
             print(ifaces)
+        # left/right psi is out of order and off by factor of i (like eigendata) but has same overall values as mathematica
         for i in range(I):
             expVecLeft = np.exp((self.layers[i].eigVal * (interfaces[i] - references[i])))
-            print("interfaces: " + str(interfaces[i]))
-            print("references: " + str(references[i+1]))
             expVecRight = np.exp((self.layers[i+1].eigVal * (interfaces[i] - references[i+1])))
-            print('expvectleft: ')
-            print(expVecLeft)
-            print('expvectRIGHT: ')
-            print(expVecRight)
-            if(DEBUG):
-                print('expVecLeft:')
-                print(expVecLeft)
-                print('expVecRight:')
-                print(expVecRight)
             leftPsi[i] = np.dot(self.layers[i].eigVec, np.diag(expVecLeft))
             rightPsi[i] = np.dot(self.layers[i+1].eigVec, np.diag(expVecRight))
+        
+        # f = open('psi.txt', 'a')
+        # print('left', leftPsi, file=f)
+        # print('right', rightPsi, file = f)
+        # f.close()
 
-        print('leftPsi: ')
-        print(leftPsi)
-        print('rightPsi: ')
-        print(rightPsi)
-        for inter in range_at_1(I):
-            for i in range_at_1(4):
-                for j in range_at_1(4):
-                    vali = (4 * (inter - 1) + i) - 1
-                    valj = (4 * (inter - 1) + j) - 1
-                    valj2 = 4 * inter + j - 1
-                    # print('indices: ')
-                    # print(vali, valj)
-                    # print(vali, valj2)
-                    s[vali][valj] = leftPsi[inter-1].item(i-1,j-1)
-                    s[vali][valj2] = np.negative(rightPsi[inter-1].item(i-1,j-1))
+        # legacy code (what the live site is using)
+        # for inter in range_at_1(I):
+        #     for i in range_at_1(4):
+        #         for j in range_at_1(4):
+        #             vali = (4 * (inter - 1) + i) - 1
+        #             valj = (4 * (inter - 1) + j) - 1
+        #             valj2 = 4 * inter + j - 1
+        #             # print('indices: ')
+        #             # print(vali, valj)
+        #             # print(vali, valj2)
+        #             s[vali][valj] = leftPsi[inter-1].item(i-1,j-1)
+        #             s[vali][valj2] = np.negative(rightPsi[inter-1].item(i-1,j-1))
         # s = s.transpose()
+
+        #  anthony's proposed code: (results in an out of range index error)
         # for inter in range(I):
-        #     for i in range(4):
-        #         for j in range(4):
-        #             s[4*inter+i][4*inter+j] = leftPsi[inter].item(i,j)
-        #             s[4*inter+i][4*(inter+1)+j] = -rightPsi[inter].item(i,j)
-                    # s[4*(inter-1)+(i)-1][4*(inter-1)+(j)-1] = leftPsi[inter].item(i,j)
-                    # s[4*(inter-1)+(i)-1][4*(inter)+(j)-1] = -rightPsi[inter].item(i,j)
-        if(DEBUG):
-            print('Scattering matrix')
-            print(s.shape)
-            print(s[0:4])
-            print(s[4:8])
-            # print(s)
-            print("\n")
+        # for i in range(4):
+            # for j in range(4):
+                # s[4*inter+i][4*inter+j] = leftPsi[inter].item(i,j)
+                # s[4*inter+i][4*(inter+1)+j] = -rightPsi[inter+1].item(i,j)
+
+        for inter in range(I):
+            for i in range(4):
+                for j in range(4):
+                    s[4*inter+i][4*inter+j] = leftPsi[inter].item(i,j)
+                    s[4*inter+i][4*(inter+1)+j] = -rightPsi[inter].item(i,j)
+
+        # scattering data is also off by factor of i and out of order but otherwise fine
+        # f = open('scattering.txt', 'a')
+        # print(s, file=f)
+        # f.close()
+
         self.scattering = s
         return s
 
@@ -504,16 +500,18 @@ class Structure:
         b = np.zeros(4*interfaces, dtype=complex)
 
 
-        
-        # s = scattering
+
+        # SS in mathematica 
         for i in range(4*interfaces):
             for j in range(4*interfaces):
                 s[i][j] = scattering[i][j+2]
+    
         if(DEBUG):
             print('Condensed Scattering matrix')
             print(s.shape)
             print(s[0:4])
             print(s[4:8])
+
         for i in range_at_1(4):
             # b[i-1] = np.subtract(b.item(i-1), np.subtract(np.multiply(scattering[i-1][0],c1),np.multiply(scattering[i-1][1],c2)))
             b[i-1] = b.item(i-1) - (scattering[i-1][0] * c1) - (scattering[i-1][1] * c2)
@@ -745,15 +743,8 @@ def test():
     s.addLayer('Layer 1', 7, ee, uu)
     s.addLayer('Layer 2', 7, e, u)
     s.addLayer('Ambient Right', 10, ee, uu)
-    s.printLayers()
-    # remove and insert the second layer 
-    #s.removeLayer(1)
-    s.printLayers()
-    #s.insertLayer('Layer 1', 7, ee, uu, 1)
-    s.printLayers()
     # build out the maxwell matrix
     m = s.buildMatrices()
-    s.printMaxwell()
     #calculate eigenvalues and modes from the maxwell matrix 
     s.calcEig()
     s.calcModes()
@@ -765,8 +756,6 @@ def test():
     # use previously defined coeffecients to calculate constants
     s.calcConstants(c1, c2, c3, c4)
     # solve scattering problem 
-    #s.calcScattering()
-    # s.printSol()
     # calculate field values for E1-E3, H1-H3, B1-B3, D1-D3
     s.determineField(omega, k1, k2)
 
