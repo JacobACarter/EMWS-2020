@@ -10,9 +10,9 @@ from cloudscattering import Structure as s
 # Run server by calling python app.py
 app = Flask(__name__)
 # List of accepted origins
-# origins = ["http://localhost:8000",
-# "https://www.math.lsu.edu"
-# ]
+origins = ["http://localhost:8000",
+"https://www.math.lsu.edu"
+]
 # Change origins to '*' if this solution gives issues
 CORS(app, resources={r"/structure": {"origins": '*'}})
 

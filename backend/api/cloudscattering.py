@@ -31,35 +31,35 @@ DEBUG = False
 
 # mEE = [ee1, ee2, ee1]
 
-# def calcFactors(pyV, pyVals):
-#     print('Factors:')
-#     ratios = []
-#     print('pyV: (',len(pyV) , ',', pyV[0].shape, ')')
-#     print('mVV: ( 3 , (4, 4) )')
-#     for i in range(2):
-#         print('layer ', i+1)
-#         print('values')
-#         print(pyVals[i])
-#         print(mEE[i])
-#         for j in range(4):
-#             print('vector ', j)
-#             py = np.transpose(pyV[i][j])
-#             m = mathematica_vectors[i][j]
-#             print(py)
-#             print(m)
-#             print('\n')
-#             ratio = np.divide(py, m)
-#             ratios.append(ratio)
-#         print('Ratios: ')
-#         if (i == 0):
-#             for ratio in ratios[0:4]:
-#                 print(ratio)
-#                 print('\n')
-#         else:
-#             for ratio in ratios[4:8]:
-#                 print(ratio)
-#                 print('\n')
-#     return ratios
+def calcFactors(pyV, pyVals):
+    print('Factors:')
+    ratios = []
+    print('pyV: (',len(pyV) , ',', pyV[0].shape, ')')
+    print('mVV: ( 3 , (4, 4) )')
+    for i in range(2):
+        print('layer ', i+1)
+        print('values')
+        print(pyVals[i])
+        print(mEE[i])
+        for j in range(4):
+            print('vector ', j)
+            py = np.transpose(pyV[i][j])
+            m = mathematica_vectors[i][j]
+            print(py)
+            print(m)
+            print('\n')
+            ratio = np.divide(py, m)
+            ratios.append(ratio)
+        print('Ratios: ')
+        if (i == 0):
+            for ratio in ratios[0:4]:
+                print(ratio)
+                print('\n')
+        else:
+            for ratio in ratios[4:8]:
+                print(ratio)
+                print('\n')
+    return ratios
 
 def range_at_1(end):
     return range(1, end+1)
@@ -551,7 +551,7 @@ class Structure:
                 interfaces[z] = z_ends[z] - z_ends[z-1]
 
         piScalar = np.pi * 0.4
-        scalar = np.exp(np.multiply(np.complex(0.0, 1.0), piScalar))
+        scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
         scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
         expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - interfaces[layer]))))
         expMat = np.matmul(scalarMat, expDiag)
@@ -592,6 +592,8 @@ class Structure:
                 interfaces[i] = z_ends[i+1]
 
         for layer in range(num_layers):
+            e = self.layers[layer].epsilon
+            u = self.layers[layer].mu
             length = z_ends[layer+1] - z_ends[layer]
 
             current_c = self.constants[layer*4:4+(layer*4)]
@@ -599,14 +601,13 @@ class Structure:
             if (DEBUG):
                 print("Constant vector at layer " + str(layer))
                 print(current_c)
-            e = self.layers[layer].epsilon
-            u = self.layers[layer].mu
+
             for i in range(num_points):
                 z = z_ends[layer] + (i * length) / num_points
 
                 piScalar = np.pi * 0.4
 
-                scalar = np.exp(np.multiply(np.complex(0.0, 1.0), piScalar))
+                scalar = np.exp(np.multiply(complex(0.0, 1.0), piScalar))
                 scalarMat = np.multiply(scalar, self.layers[layer].eigVec)
                 expDiag = np.diag(np.exp(np.multiply(self.layers[layer].eigVal, (z - references[layer]))))
                 expMat = np.matmul(scalarMat, expDiag)
@@ -621,6 +622,8 @@ class Structure:
                 Ey.append(fieldVec.item(1).real)
                 Hx.append(fieldVec.item(2).real)
                 Hy.append(fieldVec.item(3).real)
+                # Ez.append(0)
+                # Hz.append(0)
                 Ez.append((e[2][0] * Ex[-1] + e[2][1] * Ey[-1] - k2 * Hx[-1] + k1 *Hy[-1]) / (e[2][2]))
                 Hz.append(- (k2 * Ex[-1] - k1 * Ey[-1] + u[2][0] * Hx[-1] + u[2][1] * Hy[-1]) / (u[2][2]))   
         # for i in range(num_layers-1):
@@ -634,7 +637,7 @@ class Structure:
             'Ex': Ex,
             'Ey': Ey,
             'Hx': Hx,
-            'Hy': Hy,
+            'Hy': Hy, 
             'Ez': Ez, 
             'Hz': Hz
         }
@@ -648,29 +651,8 @@ class Structure:
         # print(np.array_equal(i2[0], i2[1]))
 
         return field
-    
 
 
-    def calculateTransmission(self):
-        num = self.num
-        lam1 = self.layers[0].eigVal[0]
-        lam2 = self.layers[0].eigVal[1]
-        a = self.constants[0]
-        b = self.constants[1]
-        c = self.constants[4*(num - 1)]
-        d = self.constants[4*(num - 1) + 1]
-        print(lam1)
-        print(lam2)
-        if isinstance(lam1, complex) and isinstance(lam2, int):
-            inc = (np.real(c)**2 + np.imag(c)**2)
-            res = (np.real(a)**2 + np.imag(a)**2)
-            c = np.real(inc/res)
-        if isinstance(lam1, complex) and isinstance(lam2, complex):
-            inc = lam1 * (np.real(c)**2 + np.imag(c)**2) + lam2 * (np.real(d)**2 + np.imag(d)**2)
-            res = lam1 * (np.real(a)**2 + np.imag(a)**2) + lam2 * (np.real(b)**2 + np.imag(b)**2)
-            c = np.real(inc/res)
-        print(c)
-    
     # The structure string method
     def __str__(self):
         return 'Omega: ' + str(self.omega) + '\n(k1,k2): (' + str(self.k1*self.omega) + ',' + str(self.k2*self.omega) + ')\n'
@@ -679,8 +661,8 @@ class Structure:
 # Test code
 def test():
     print('Starting Test:')
-    size = 2
-    omega = .398
+    size = 3
+    omega = 0.398
     k1 = 0.5
     k2 = 0.22
     s = Structure(size, omega, k1, k2)
@@ -696,35 +678,34 @@ def test():
     uu = np.array([[1,0,0],
                 [0,4,0],
                 [0,0,1]])
-    s.addLayer('Ambient Left', 7, e, u)
+    s.addLayer('Ambient Left', 10, e, u)
     s.addLayer('Layer 1', 7, e, u)
-    # s.addLayer('Ambient Right', 10, e, u)
-    # s.printLayers()
-    # s.removeLayer(1)
-    # s.printLayers()
-    # s.insertLayer('Layer 1', 7, ee, uu, 1)
-    # s.printLayers()
+    s.addLayer('Ambient Right', 10, e, u)
+    s.printLayers()
+    s.removeLayer(1)
+    s.printLayers()
+    s.insertLayer('Layer 1', 7, ee, uu, 1)
+    s.printLayers()
     m = s.buildMatrices()
-    # print('Number of Layers: ' + str(len(m)))
-    # print('Dimension of 1st layer Maxwell: ' + str(m[0].shape))
-    # print('Dimension of 2nd layer Maxwell: ' + str(m[1].shape))
-    # print('Dimension of 3rd layer Maxwell: ' + str(m[2].shape))
-    # print(s)
-    # s.printMaxwell()
+    print('Number of Layers: ' + str(len(m)))
+    print('Dimension of 1st layer Maxwell: ' + str(m[0].shape))
+    print('Dimension of 2nd layer Maxwell: ' + str(m[1].shape))
+    print('Dimension of 3rd layer Maxwell: ' + str(m[2].shape))
+    print(s)
+    s.printMaxwell()
     s.calcEig()
     s.calcModes()
     c1 = 1
     c2 = 0
     c3 = 0
     c4 = 0
-    s.calcConstants(c1,c2,c3,c4)
-    # print('With incoming coefficients (' + str(c1)+ ', ' + str(c2)+ ') on the left and (' + str(c3)+ ', ' + str(c4)+ ') on the right')
-    # s.printSol()
-    # print('\nFinal Constants: \n' + str(const))
-    # print('\nFinal Scattering Matrix:\n' + str(s.scattering))
-    # print('Sum of solutions in all layers is 0: ' + str(s.checkSol()))
-    # print('\n\nEnd of test\n\n')
-    s.calculateTransmission()
+    const = s.calcConstants(c1,c2,c3,c4)
+    print('With incoming coefficients (' + str(c1)+ ', ' + str(c2)+ ') on the left and (' + str(c3)+ ', ' + str(c4)+ ') on the right')
+    s.printSol()
+    print('\nFinal Constants: \n' + str(const))
+    print('\nFinal Scattering Matrix:\n' + str(s.scattering))
+    print('Sum of solutions in all layers is 0: ' + str(s.checkSol()))
+    print('\n\nEnd of test\n\n')
 
 
 def main():
@@ -732,5 +713,3 @@ def main():
     test()
     end = time.perf_counter()
     print(f'Ran test in: {end-start:0.4f} seconds')
-
-main()
