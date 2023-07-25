@@ -5,15 +5,14 @@ import numpy as np
 from flask_cors import CORS, cross_origin
 import sys
 sys.path.append('/Users/joelkeller/EMWS/EMWS-2020/backend')
-from timedynamic import Structure as s
-
+from cloudscattering import Structure as s
 
 # Run server by calling python app.py
 app = Flask(__name__)
 # List of accepted origins
-origins = ["http://localhost:8000",
-"https://www.math.lsu.edu"
-]
+# origins = ["http://localhost:8000",
+# "https://www.math.lsu.edu"
+# ]
 # Change origins to '*' if this solution gives issues
 CORS(app, resources={r"/structure": {"origins": '*'}})
 
@@ -293,10 +292,13 @@ def field():
         print('\nDid not find incoming constants! Using defaults...')
         incoming = [1, 0, 0, 0]
 
+
     struct.calcScattering()
     struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
     data['scattering'] = encode_scattering(struct.scattering)
     data['constants'] = encode_constants(struct.constants)
+
+
 
     num_points = None
     try:
@@ -333,7 +335,7 @@ def field():
         struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
         data['scattering'] = encode_scattering(struct.scattering)
         data['constants'] = encode_constants(struct.constants)
-        field = struct.determineField(omega, k1, k2, num_points)
+        field = struct.determineField(num_points)
     data['field'] = field
 
     return json.jsonify(data)
