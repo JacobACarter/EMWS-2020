@@ -672,8 +672,9 @@ class Structure:
         print(leftIncoming)
         refAug = np.matmul(J, np.transpose(rightTransmitted))
         energyInc = np.dot(np.transpose(incAug), np.transpose(np.conjugate(leftIncoming)))
-        # energyOut = np.dot(refAug, np.conjugate(rightTransmitted))
-
+        energyOut = np.dot(refAug, np.conjugate(rightTransmitted))
+        t = energyOut / energyInc
+        return t 
         
 
 
