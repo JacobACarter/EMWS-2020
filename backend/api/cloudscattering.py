@@ -328,12 +328,10 @@ class Structure:
         if (DEBUG):
             print('\nCalculating Modes')
         for layer in self.layers:
-            mode = np.zeros((1,4), dtype=complex)
-            for n in range(4):
-                mode += np.multiply(np.multiply(np.real(layer.eigVec[n]), np.exp(np.real(layer.eigVal[n]))), layer.length)
-            layer.modes = mode
-            if (DEBUG):
-                print(str(layer.name) + ' Modes:\nc*' + str(layer.modes))
+            expDiag = np.diag(np.exp(layer.eigVal * layer.length))
+            mode = np.matmul(np.transpose(layer.eigVec), expDiag) 
+            layer.mode = mode 
+
 
     def printMaxwell(self):
         print('Maxwells:')
@@ -477,11 +475,12 @@ class Structure:
         #         c[layer-1][j-1] = b[4*(layer-1)+j-1]
         self.constants = c
         for i in range(self.num):
-            for j in range(4):
-                # Set solution equal to the mode times the constant
-                sol = self.layers[i].modes[0][j] * c[i*4+j]
-                # Store solution in the structure layer
-                self.layers[i].solution[j] = sol
+            currentConst =  np.transpose(c[i:i+4])
+            layerMode = np.array(self.layers[i].mode)
+            #     # Set solution equal to the mode times the constant
+            sol = layerMode.dot(currentConst)
+            # # Store solution in the structure layer
+            self.layers[i].solution = sol
         # print('scattering: ', str(s))
         # print('constants: ', str(c))
         # print('b: ', str(b))
@@ -651,6 +650,33 @@ class Structure:
         # print(np.array_equal(i2[0], i2[1]))
 
         return field
+    
+    def calculateTransmission(self):
+        layers = self.num
+        constants = self.constants
+        leftMode = self.layers[0].mode
+        rightMode = self.layers[layers-1].mode
+        leftConstants = np.array([0,0,constants[2], constants[3]])
+        rightConstants = np.array([constants[4*(layers-1)], constants[4*(layers-1) + 1], 0,0])
+        leftIncoming = np.dot(leftMode, np.transpose(leftConstants))
+        rightTransmitted = np.dot(rightMode, np.transpose(rightConstants))
+
+        J = np.array([
+            [0,0,0,1],
+            [0,0,-1,0],
+            [0,-1,0,0],
+            [1, 0,0,0]
+        ])
+        incAug = np.matmul(J, np.transpose(leftIncoming))
+        print('------')
+        print(leftIncoming)
+        refAug = np.matmul(J, np.transpose(rightTransmitted))
+        energyInc = np.dot(np.transpose(incAug), np.transpose(np.conjugate(leftIncoming)))
+        # energyOut = np.dot(refAug, np.conjugate(rightTransmitted))
+
+        
+
+
 
 
     # The structure string method
@@ -700,12 +726,13 @@ def test():
     c3 = 0
     c4 = 0
     const = s.calcConstants(c1,c2,c3,c4)
-    print('With incoming coefficients (' + str(c1)+ ', ' + str(c2)+ ') on the left and (' + str(c3)+ ', ' + str(c4)+ ') on the right')
-    s.printSol()
-    print('\nFinal Constants: \n' + str(const))
-    print('\nFinal Scattering Matrix:\n' + str(s.scattering))
-    print('Sum of solutions in all layers is 0: ' + str(s.checkSol()))
-    print('\n\nEnd of test\n\n')
+    s.calculateTransmission()
+    # print('With incoming coefficients (' + str(c1)+ ', ' + str(c2)+ ') on the left and (' + str(c3)+ ', ' + str(c4)+ ') on the right')
+    # s.printSol()
+    # print('\nFinal Constants: \n' + str(const))
+    # print('\nFinal Scattering Matrix:\n' + str(s.scattering))
+    # print('Sum of solutions in all layers is 0: ' + str(s.checkSol()))
+    # print('\n\nEnd of test\n\n')
 
 
 def main():
@@ -713,3 +740,5 @@ def main():
     test()
     end = time.perf_counter()
     print(f'Ran test in: {end-start:0.4f} seconds')
+
+main()
