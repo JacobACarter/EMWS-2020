@@ -274,10 +274,7 @@ class Structure:
                 print('For layer ' + str(n+1))
             #start = time.perf_counter()
             eigVal, eigVec = np.linalg.eig(self.maxwell[n])
-            # eigVal, eigVec = eig(self.maxwell[n])[0], eig(self.maxwell[n])[1]
-            # print(eigVal, eigVec)
-            # for i in range(4):
-            #     self.layers[n].eigVec[i] = np.transpose(eigVec[i])
+ 
             if n == 0 or n == self.num - 1:
                 self.layers[n].eigVal, self.layers[n].eigVec = organizeEigen(eigVal, eigVec)
             else:
@@ -296,6 +293,8 @@ class Structure:
                 print(f'Values:\n{self.layers[n].eigVal}')
             if (DEBUG):
                 print(f'Vectors:\n{self.layers[n].eigVec}')
+
+
 
     # Import preexisting eigendata
     def importEig(self, e_vals, e_vecs):
@@ -327,11 +326,12 @@ class Structure:
     def calcModes(self):
         if (DEBUG):
             print('\nCalculating Modes')
-        for layer in self.layers:
-            expDiag = np.diag(np.exp(layer.eigVal * layer.length))
-            mode = np.matmul(np.transpose(layer.eigVec), expDiag) 
-            layer.mode = mode 
 
+        for layer in self.layers:
+            lambda_w = np.exp(layer.eigVal * layer.length)
+            expDiag = np.diag(lambda_w)
+            mode = np.dot(np.transpose(layer.eigVec), expDiag) 
+            layer.mode = mode
 
     def printMaxwell(self):
         print('Maxwells:')
@@ -386,6 +386,7 @@ class Structure:
                 print(expVecLeft)
                 print('expVecRight:')
                 print(expVecRight)
+            
             leftPsi[i] = np.dot(self.layers[i].eigVec, np.diag(expVecLeft))
             rightPsi[i] = np.dot(self.layers[i+1].eigVec, np.diag(expVecRight))
         if(DEBUG):
@@ -399,19 +400,9 @@ class Structure:
                     vali = (4 * (inter - 1) + i) - 1
                     valj = (4 * (inter - 1) + j) - 1
                     valj2 = 4 * inter + j - 1
-                    # print('indices: ')
-                    # print(vali, valj)
-                    # print(vali, valj2)
                     s[vali][valj] = leftPsi[inter-1].item(i-1,j-1)
                     s[vali][valj2] = np.negative(rightPsi[inter-1].item(i-1,j-1))
-        # s = s.transpose()
-        # for inter in range(I):
-        #     for i in range(4):
-        #         for j in range(4):
-        #             s[4*inter+i][4*inter+j] = leftPsi[inter].item(i,j)
-        #             s[4*inter+i][4*(inter+1)+j] = -rightPsi[inter].item(i,j)
-                    # s[4*(inter-1)+(i)-1][4*(inter-1)+(j)-1] = leftPsi[inter].item(i,j)
-                    # s[4*(inter-1)+(i)-1][4*(inter)+(j)-1] = -rightPsi[inter].item(i,j)
+
         if(DEBUG):
             print('Scattering matrix')
             print(s.shape)
@@ -439,22 +430,12 @@ class Structure:
             print(s[0:4])
             print(s[4:8])
         for i in range_at_1(4):
-            # b[i-1] = np.subtract(b.item(i-1), np.subtract(np.multiply(scattering[i-1][0],c1),np.multiply(scattering[i-1][1],c2)))
             b[i-1] = b.item(i-1) - (scattering[i-1][0] * c1) - (scattering[i-1][1] * c2)
             aug1 = 4*(interfaces-1)+i-1
             aug2 = 4*(interfaces+1)-2
             aug3 = 4*(interfaces+1)-1
             b[aug1] = b.item(aug1) - (scattering[aug1][aug2] * c3) - (scattering[aug1][aug3] * c4)
-            # b[aug1] = np.subtract(b.item(aug1), np.subtract(np.multiply(scattering[aug1][aug2],c3),np.multiply(scattering[aug1][aug3],c4)))
-        # for i in range(4):
-        #     f[i] = np.subtract(f.item(i), np.subtract(np.multiply(scattering[i][0],c1),np.multiply(scattering[i][1],c2)))
-        #     aug1 = 4*(interfaces-1)+i-1
-        #     aug2 = 4*(interfaces+1)-2
-        #     aug3 = 4*(interfaces+1)-1
-        #     f[aug1] = np.subtract(f.item(aug1), np.subtract(np.multiply(scattering[aug1][aug2],c3),np.multiply(scattering[aug1][aug3],c4)))
-        #     f[4*(interfaces-1)+i] = f[4*(interfaces-1)+i] - scattering[4*(interfaces-1)+i][4*(interfaces+1)-1]*c3 - scattering[4*(interfaces-1)+i][4*(interfaces+1)-1]*c4
-        # b is ff in mathematica code
-        # s is ss in mathematica code
+
         if(DEBUG):
             print('b')
             print(b)
@@ -467,12 +448,7 @@ class Structure:
         c[4*layers-1] = c4
         for i in range(4*interfaces):
             c[i+2] = cPrime[i]
-        # print(c)
-        # The following is code in mathematica that is currently missing
-        # c = np.zeros((layers,4), dtype=complex)
-        # for layer in range_at_1(interfaces):
-        #     for j in range_at_1(4):
-        #         c[layer-1][j-1] = b[4*(layer-1)+j-1]
+
         self.constants = c
         for i in range(self.num):
             currentConst =  np.transpose(c[i:i+4])
@@ -481,13 +457,9 @@ class Structure:
             sol = layerMode.dot(currentConst)
             # # Store solution in the structure layer
             self.layers[i].solution = sol
-        # print('scattering: ', str(s))
-        # print('constants: ', str(c))
-        # print('b: ', str(b))
-        # cs = (np.matmul(s,cPrime))
-        # print('S*c:', str(cs))
-        # print(cs == b)
-        return c
+
+        return c 
+
 
     # Get all the solutions for the structure
     def solution(self):
@@ -612,24 +584,15 @@ class Structure:
                 expMat = np.matmul(scalarMat, expDiag)
                 fieldVec = np.matmul(expMat, current_c)
 
-                # if i == 0:
-                    # print("Field vec at " + str(z))
-                    # print(fieldVec)
+
 
                 z_arr.append(z)
                 Ex.append(fieldVec.item(0).real)
                 Ey.append(fieldVec.item(1).real)
                 Hx.append(fieldVec.item(2).real)
                 Hy.append(fieldVec.item(3).real)
-                # Ez.append(0)
-                # Hz.append(0)
                 Ez.append((e[2][0] * Ex[-1] + e[2][1] * Ey[-1] - k2 * Hx[-1] + k1 *Hy[-1]) / (e[2][2]))
                 Hz.append(- (k2 * Ex[-1] - k1 * Ey[-1] + u[2][0] * Hx[-1] + u[2][1] * Hy[-1]) / (u[2][2]))   
-        # for i in range(num_layers-1):
-        #     print(Ex[i*num_points] == Ex[i*num_points+1])
-        #     print(Ey[i*num_points] == Ey[i*num_points+1])
-        #     print(Hx[i*num_points] == Hx[i*num_points+1])
-        #     print(Hy[i*num_points] == Hx[i*num_points+1])
 
         field = {
             'z': z_arr,
@@ -644,41 +607,49 @@ class Structure:
         self.field = field
         i1 = [self.determineFieldAtSpecificPointInLayer(0, 0), self.determineFieldAtSpecificPointInLayer(0, 1)]
         i2 = [self.determineFieldAtSpecificPointInLayer(7, 1), self.determineFieldAtSpecificPointInLayer(7, 2)]
-        # print(i1)
-        # print(i2)
-        # print(np.array_equal(i1[0], i1[1]))
-        # print(np.array_equal(i2[0], i2[1]))
 
         return field
     
     def calculateTransmission(self):
         layers = self.num
         constants = self.constants
-        leftMode = self.layers[0].mode
-        rightMode = self.layers[layers-1].mode
-        leftConstants = np.array([0,0,constants[2], constants[3]])
-        rightConstants = np.array([constants[4*(layers-1)], constants[4*(layers-1) + 1], 0,0])
-        leftIncoming = np.dot(leftMode, np.transpose(leftConstants))
-        rightTransmitted = np.dot(rightMode, np.transpose(rightConstants))
+        leftMode = self.layers[0].mode[:,0:2]
+        rightMode = self.layers[layers-1].mode[:, 0:2]
+        leftConstants = np.array([np.abs(constants[0]), np.abs(constants[1])])    
+        rightConstants = np.array([np.abs(constants[4*(layers) - 4]), np.abs(constants[4*(layers) - 3])])
+        leftPsi = np.matmul(leftMode, leftConstants)
+        rightPsi     = np.matmul(rightMode, rightConstants)
 
-        J = np.array([
+
+        # currently only have one transmission case done: will complete other tonight
+        if not isNumZero(np.abs(np.imag(self.layers[0].eigVal[0]))) and not(isNumZero(np.abs(np.real(self.layers[0].eigVal[1])))):
+            print('Case I: One Imaginary Mode, 1 Real Mode')
+            print('Mode 1:', np.imag(self.layers[0].eigVal[0]), 'i')
+            print('Mode 2:', np.real(self.layers[0].eigVal[1]))
+            J = np.array([
             [0,0,0,1],
             [0,0,-1,0],
             [0,-1,0,0],
             [1, 0,0,0]
-        ])
-        incAug = np.matmul(J, np.transpose(leftIncoming))
-        print('------')
-        print(leftIncoming)
-        refAug = np.matmul(J, np.transpose(rightTransmitted))
-        energyInc = np.dot(np.transpose(incAug), np.transpose(np.conjugate(leftIncoming)))
-        energyOut = np.dot(refAug, np.conjugate(rightTransmitted))
-        t = energyOut / energyInc
-        return t 
+            ])
+            incAug = np.matmul(J, np.transpose(leftPsi))
+            transAug = np.matmul(J, np.transpose(rightPsi))
+            energyInc = np.dot(np.transpose(incAug), np.transpose(np.conjugate(leftPsi)))
+            energyTrans = np.dot(np.transpose(transAug), np.transpose(np.conjugate(rightPsi)))
+            transmission = energyTrans / energyInc
+            if isNumZero(np.imag(transmission)): 
+                transmission =np.sum(np.real(transmission))
+            else: 
+                print('Calculation Error')
+
+            return transmission
+
+        else: 
+            print('Case II: In Dev')
+            print('Please Change Parameters')
+            print('Mode 1:', self.layers[0].eigVal[0])
+            print('Mode 2:', self.layers[0].eigVal[1])
         
-
-
-
 
     # The structure string method
     def __str__(self):
@@ -689,9 +660,9 @@ class Structure:
 def test():
     print('Starting Test:')
     size = 3
-    omega = 0.398
     k1 = 0.5
     k2 = 0.22
+    omega = .250
     s = Structure(size, omega, k1, k2)
     e = np.array([[1.5,0,0],
                 [0,8,0],
@@ -705,20 +676,15 @@ def test():
     uu = np.array([[1,0,0],
                 [0,4,0],
                 [0,0,1]])
-    s.addLayer('Ambient Left', 10, e, u)
-    s.addLayer('Layer 1', 7, e, u)
-    s.addLayer('Ambient Right', 10, e, u)
-    s.printLayers()
-    s.removeLayer(1)
-    s.printLayers()
-    s.insertLayer('Layer 1', 7, ee, uu, 1)
-    s.printLayers()
+    s.addLayer('Ambient Left', 2, e, u)
+    s.addLayer('Layer 1', 1, ee, uu)
+    s.addLayer('Ambient Right', 2, e, u)
+    # s.printLayers()
+    # s.removeLayer(1)
+    # s.printLayers()
+    # s.insertLayer('Layer 1', 7, ee, uu, 1)
+    # s.printLayers()
     m = s.buildMatrices()
-    print('Number of Layers: ' + str(len(m)))
-    print('Dimension of 1st layer Maxwell: ' + str(m[0].shape))
-    print('Dimension of 2nd layer Maxwell: ' + str(m[1].shape))
-    print('Dimension of 3rd layer Maxwell: ' + str(m[2].shape))
-    print(s)
     s.printMaxwell()
     s.calcEig()
     s.calcModes()

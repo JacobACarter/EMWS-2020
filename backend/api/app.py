@@ -437,9 +437,6 @@ def transmission():
     k1 = req['k1']
     k2 = req['k2']
     layers = req['layers']
-    k1 = req['k1']
-    k2 = req['k2']
-    layers = req['layers']
     points = req['points']
     interval = (endOmega - startOmega) / points 
     # right now assume 3 layer system
