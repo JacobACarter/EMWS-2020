@@ -4,7 +4,7 @@ import numpy as np
 from scipy.linalg import solve
 from scipy.linalg import eig
 # from numpy.linalg import inv
-
+import matplotlib.pyplot as plt
 # Set precision for printing arrays
 np.set_printoptions(precision=5, suppress=True)
 
@@ -92,6 +92,46 @@ def isNumZero(num):
     precision = 1e-6
     return (num < precision and num > -precision) or num == 0
 
+# def organizeEigen(val, vec):
+#     for i in range(4):
+#         # print('vec ', i, vec)
+#         v = val[i]
+#         imaginary = (not isNumZero(v.imag)) and (isNumZero(v.real))
+#         real = (isNumZero(v.imag)) and (not isNumZero(v.real))
+#         if imaginary:
+#             if (DEBUG):
+#                 print('Eigenvalue ' + str(v) + ' is imaginary')
+#             if (v.imag < 0) and (not i == 0):
+#                 if (DEBUG):
+#                     print('Eigenvalue ' + str(v) + ' is negative imaginary. Swapping to front!')
+#                 val = swapArrayIndices(val, i, 0)
+#                 vec = swapMatrixColumns(vec, i, 0)
+#             elif not i == 2:
+#                 if (DEBUG):
+#                     print('Eigenvalue ' + str(v) + ' is positive imaginary. Swapping to 3rd slot!')
+#                 val = swapArrayIndices(val, i, 2)
+#                 vec = swapMatrixColumns(vec, i, 2)
+#         elif real:
+#             if (DEBUG):
+#                 print('Eigenvalue ' + str(v) + ' is real')
+#             if (v.real > 0) and (not i == 1):
+#                 if (DEBUG):
+#                     print('Eigenvalue ' + str(v) + ' is positive real. Swapping to second entry!')
+#                 val = swapArrayIndices(val, i, 1)
+#                 vec = swapMatrixColumns(vec, i, 1)
+#     t4 = val[3]
+#     if ((not isNumZero(t4.imag)) and (isNumZero(t4.real))):
+#         if (DEBUG):
+#                 print('Eigenvalue ' + str(t4) + ' is imaginary')
+#         if (t4.imag < 0) :
+#             if (DEBUG):
+#                 print('Eigenvalue ' + str(t4) + ' is negative imaginary. Swapping to third!')
+#             val = swapArrayIndices(val, 3, 2)
+#             vec = swapMatrixColumns(vec, 3, 2)
+#     # vec = swapMatrixColumns(vec, 3, 2)
+#     return val, vec
+
+
 def organizeEigen(val, vec):
     for i in range(4):
         # print('vec ', i, vec)
@@ -103,20 +143,25 @@ def organizeEigen(val, vec):
                 print('Eigenvalue ' + str(v) + ' is imaginary')
             if (v.imag < 0) and (not i == 0):
                 if (DEBUG):
-                    print('Eigenvalue ' + str(v) + ' is negative imaginary. Swapping to front!')
-                val = swapArrayIndices(val, i, 0)
-                vec = swapMatrixColumns(vec, i, 0)
-            elif not i == 2:
-                if (DEBUG):
-                    print('Eigenvalue ' + str(v) + ' is positive imaginary. Swapping to 3rd slot!')
+                    print('Eigenvalue ' + str(v) + ' is negative imaginary. Swapping to third!')
                 val = swapArrayIndices(val, i, 2)
                 vec = swapMatrixColumns(vec, i, 2)
+            elif not i == 2:
+                if (DEBUG):
+                    print('Eigenvalue ' + str(v) + ' is positive imaginary. Swapping to first slot!')
+                val = swapArrayIndices(val, i, 0)
+                vec = swapMatrixColumns(vec, i, 0)
         elif real:
             if (DEBUG):
                 print('Eigenvalue ' + str(v) + ' is real')
             if (v.real > 0) and (not i == 1):
                 if (DEBUG):
-                    print('Eigenvalue ' + str(v) + ' is positive real. Swapping to second entry!')
+                    print('Eigenvalue ' + str(v) + ' is positive real. Swapping to fourth entry!')
+                val = swapArrayIndices(val, i, 3)
+                vec = swapMatrixColumns(vec, i, 3)
+            else: 
+                if (DEBUG):
+                    print('Eigenvalue ' + str(v) + ' is positive real. Swapping to fourth entry!')
                 val = swapArrayIndices(val, i, 1)
                 vec = swapMatrixColumns(vec, i, 1)
     t4 = val[3]
@@ -130,6 +175,8 @@ def organizeEigen(val, vec):
             vec = swapMatrixColumns(vec, 3, 2)
     # vec = swapMatrixColumns(vec, 3, 2)
     return val, vec
+
+
 
 def organizeEigenForMiddleLayers(val, vec):
     for i in range(4):
@@ -274,7 +321,7 @@ class Structure:
                 print('For layer ' + str(n+1))
             #start = time.perf_counter()
             eigVal, eigVec = np.linalg.eig(self.maxwell[n])
- 
+            # keep track of the eigenvaqlues 
             if n == 0 or n == self.num - 1:
                 self.layers[n].eigVal, self.layers[n].eigVec = organizeEigen(eigVal, eigVec)
             else:
@@ -293,8 +340,11 @@ class Structure:
                 print(f'Values:\n{self.layers[n].eigVal}')
             if (DEBUG):
                 print(f'Vectors:\n{self.layers[n].eigVec}')
-
-
+        # print('----------')
+        # print(self.layers[0].eigVal)
+        # print('------------')
+        # print(self.layers[2].eigVal)
+        # print( (0.09943)*(0.09943) + (0.24557)*(0.24557) + (0.89378)*(0.89378) + (0.36189)*(0.36189) )
 
     # Import preexisting eigendata
     def importEig(self, e_vals, e_vecs):
@@ -332,6 +382,7 @@ class Structure:
             expDiag = np.diag(lambda_w)
             mode = np.dot(np.transpose(layer.eigVec), expDiag) 
             layer.mode = mode
+
 
     def printMaxwell(self):
         print('Maxwells:')
@@ -613,42 +664,24 @@ class Structure:
     def calculateTransmission(self):
         layers = self.num
         constants = self.constants
-        leftMode = self.layers[0].mode[:,0:2]
-        rightMode = self.layers[layers-1].mode[:, 0:2]
-        leftConstants = np.array([np.abs(constants[0]), np.abs(constants[1])])    
-        rightConstants = np.array([np.abs(constants[4*(layers) - 4]), np.abs(constants[4*(layers) - 3])])
-        leftPsi = np.matmul(leftMode, leftConstants)
-        rightPsi     = np.matmul(rightMode, rightConstants)
+        mode_1 = self.layers[0].eigVal[0]
+        mode_2 = self.layers[0].eigVal[1]
+        
 
+        transmitted = constants[4*(layers) - 4]
+        transmisssionSq = np.real(transmitted)**2 + np.imag(transmitted)**2
+        reflected = constants[2]
+        reflectionSq = np.real(reflected)**2 + np.imag(reflected)**2
 
-        # currently only have one transmission case done: will complete other tonight
-        if not isNumZero(np.abs(np.imag(self.layers[0].eigVal[0]))) and not(isNumZero(np.abs(np.real(self.layers[0].eigVal[1])))):
-            print('Case I: One Imaginary Mode, 1 Real Mode')
-            print('Mode 1:', np.imag(self.layers[0].eigVal[0]), 'i')
-            print('Mode 2:', np.real(self.layers[0].eigVal[1]))
-            J = np.array([
-            [0,0,0,1],
-            [0,0,-1,0],
-            [0,-1,0,0],
-            [1, 0,0,0]
-            ])
-            incAug = np.matmul(J, np.transpose(leftPsi))
-            transAug = np.matmul(J, np.transpose(rightPsi))
-            energyInc = np.dot(np.transpose(incAug), np.transpose(np.conjugate(leftPsi)))
-            energyTrans = np.dot(np.transpose(transAug), np.transpose(np.conjugate(rightPsi)))
-            transmission = energyTrans / energyInc
-            if isNumZero(np.imag(transmission)): 
-                transmission =np.sum(np.real(transmission))
-            else: 
-                print('Calculation Error')
-
-            return transmission
-
+        if isNumZero((transmisssionSq + reflectionSq) - 1): 
+            print('Transmitted and Reflected acting correctly')
+            return transmisssionSq, reflectionSq
         else: 
-            print('Case II: In Dev')
-            print('Please Change Parameters')
-            print('Mode 1:', self.layers[0].eigVal[0])
-            print('Mode 2:', self.layers[0].eigVal[1])
+            print('Transmission Issues: please check parameters')
+
+
+       
+        
         
 
     # The structure string method
@@ -662,44 +695,54 @@ def test():
     size = 3
     k1 = 0.5
     k2 = 0.22
-    omega = .250
-    s = Structure(size, omega, k1, k2)
-    e = np.array([[1.5,0,0],
-                [0,8,0],
-                [0,0,1]])
-    ee = np.array([[8,0,0],
-                [0,1.5,0],
-                [0,0,1]])
-    u = np.array([[4,0,0],
-                [0,1,0],
-                [0,0,1]])
-    uu = np.array([[1,0,0],
-                [0,4,0],
-                [0,0,1]])
-    s.addLayer('Ambient Left', 2, e, u)
-    s.addLayer('Layer 1', 1, ee, uu)
-    s.addLayer('Ambient Right', 2, e, u)
-    # s.printLayers()
-    # s.removeLayer(1)
-    # s.printLayers()
-    # s.insertLayer('Layer 1', 7, ee, uu, 1)
-    # s.printLayers()
-    m = s.buildMatrices()
-    s.printMaxwell()
-    s.calcEig()
-    s.calcModes()
-    c1 = 1
-    c2 = 0
-    c3 = 0
-    c4 = 0
-    const = s.calcConstants(c1,c2,c3,c4)
-    s.calculateTransmission()
-    # print('With incoming coefficients (' + str(c1)+ ', ' + str(c2)+ ') on the left and (' + str(c3)+ ', ' + str(c4)+ ') on the right')
-    # s.printSol()
-    # print('\nFinal Constants: \n' + str(const))
-    # print('\nFinal Scattering Matrix:\n' + str(s.scattering))
-    # print('Sum of solutions in all layers is 0: ' + str(s.checkSol()))
-    # print('\n\nEnd of test\n\n')
+    transVals = []
+    refVals = []
+    omegaVals = []
+    for omega in range(265, 365, 10): 
+        omega = omega / 1000
+        s = Structure(size, omega, k1, k2)
+        e = np.array([[1.5,0,0],
+                    [0,8,0],
+                    [0,0,1]])
+        ee = np.array([[8,0,0],
+                    [0,1.5,0],
+                    [0,0,1]])
+        u = np.array([[4,0,0],
+                    [0,1,0],
+                    [0,0,1]])
+        uu = np.array([[1,0,0],
+                    [0,4,0],
+                    [0,0,1]])
+        s.addLayer('Ambient Left', 2, e, u)
+        s.addLayer('Layer 1', 1, ee, uu)
+        s.addLayer('Ambient Right', 2, e, u)
+        # s.printLayers()
+        # s.removeLayer(1)
+        # s.printLayers()
+        # s.insertLayer('Layer 1', 7, ee, uu, 1)
+        # s.printLayers()
+        m = s.buildMatrices()
+        s.printMaxwell()
+        s.calcEig()
+        s.calcModes()
+        c1 = 1
+        c2 = 0
+        c3 = 0
+        c4 = 0
+        const = s.calcConstants(c1,c2,c3,c4)
+        tr, ref = s.calculateTransmission()
+        transVals.append(tr)
+        refVals.append(ref)
+        omegaVals.append(omega)
+    # plt.plot(omegaVals, transVals, "b",label = "Transmission" )
+    # plt.plot(omegaVals, refVals, "r",label = "Relection" )
+    # plt.xticks(omegaVals)
+    # plt.ylim(0, 1)
+    # plt.xlabel('Omega')
+    # plt.ylabel('Energy Squared')
+    # plt.legend()
+    # plt.show()
+    
 
 
 def main():
