@@ -1,0 +1,10 @@
+name: emws
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - flask
+  - python=3.7
+  - flask_cors
+  - scipy
+  - matplotlib

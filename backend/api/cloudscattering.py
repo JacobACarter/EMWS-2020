@@ -747,7 +747,7 @@ def test():
 
 def main():
     start = time.perf_counter()
-    test()
+    # test()
     end = time.perf_counter()
     print(f'Ran test in: {end-start:0.4f} seconds')
 
