@@ -11,16 +11,11 @@ https://code.visualstudio.com/download
 
 Get the code next. In Visual Studio Code, you should see the Explorer view in the left-hand window, if not press `ctrl+shift+P` to open it.  There you should see and click the option `Clone Repository`.  Next, type in the repository URL for the EMWS code when prompted.  For my example, I used my own fork of the code at `https://github.com/awelters/EMWS-2020.git`. Finally, select (or create) the local directory into which you want to clone the project and when prompted make sure to click `Add to Workspace`.
 
-Open the integrated terminal in Visual Studio code by pressing ```ctrl+shift+` ```for the next series of commands.
-
-By default for the EMWS repo the branch of code when cloned is `master`. If for example you wanted to work on the `improve-developer-experience` branch then run the following command:
+By default the EMWS repo's branch of code when cloned is `master`. If for example you wanted to work on the `improve-developer-experience` branch you need to check it out.  To do so, open the integrated terminal in Visual Studio code by pressing ```ctrl+shift+` ``` and then run the following command:
 
 `git checkout improve-developer-experience`
 
-Install the Python plugin extension to help with IntelliSense with the following command, you should see a success message,
-something like "Extension 'ms-python.python' v2023.18.0 was successfully installed":
-
-```code --install-extension ms-python.python```
+Install the Python plugin extension to help with IntelliSense.  You can do so by pressing `ctrl+shift+X` to open the Extensions view in the left-hand window, clicking the `Python` extension, and finally clicking the `Install` button.
 
 Download miniconda, ensure path set correctly, in windows easiest to use the installer
 https://docs.conda.io/projects/miniconda/en/latest/
