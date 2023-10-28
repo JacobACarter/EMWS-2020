@@ -314,7 +314,8 @@ def field():
         for maxwell in struct.maxwell:
             m = encode_maxwell(maxwell)
             maxwells.append(m)
-        data['maxwell_matrices'] = maxwells
+        data['maxwell_matrices'] = maxwells 
+
         struct.calcEig()
         struct.calcModes()
         e_vals = []
@@ -436,29 +437,34 @@ def transmission():
     k2 = req['k2']
     layers = req['layers']
     points = req['points']
+    incoming = req['incoming']
     interval = (endOmega - startOmega) / points 
     # right now assume 3 layer system
     num = 3
     # # Setup return data
     data = {}
-    for omega in range(startOmega, endOmega, interval):
-        energy = []
+    omega = startOmega
+    while omega < endOmega:
+
+        transmissionRes = []
         omegas = [].append(omega)
+
         struct = s(num, omega, k1, k2)
         for layer in layers:
+        # build layers
             struct.addLayer(layer['name'], layer['length'], layer['epsilon'], layer['mu'])
+        
 
-
-        # Get existing data
+        # should not be any maxwell, eig data
         maxwell_matrices = None
         eigenvalues = None
         eigenvectors = None
-
+        
         try:
-            maxwell_matrices = req['maxwell_matrices']
+                maxwell_matrices = req['maxwell_matrices']
         except Exception:
             pass
-            #print('\nFailed to load maxwell. Will calculate data')
+                #print('\nFailed to load maxwell. Will calculate data')
         try:
             eigenvalues = req['eigenvalues']
             eigenvectors = req['eigenvectors']
@@ -507,7 +513,6 @@ def transmission():
             struct.importEig(e_vals, e_vecs)
             struct.calcModes()
 
-        # Calculate Scattering Matrix and Constants
         incoming = None
         try:
             incoming = decode_eigen(req['incoming'])
@@ -515,14 +520,16 @@ def transmission():
             print('\nDid not find incoming constants! Using defaults...')
             incoming = [1, 0, 0, 0]
 
+
         struct.calcScattering()
         struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
-        data['scattering'] = encode_scattering(struct.scattering)
-        data['constants'] = encode_constants(struct.constants)
+
         transmission = struct.calculateTransmission()
-        energy.append(transmission)
+        transmissionRes.append(transmission) 
+        omega += interval 
+    
     data = {
-        'transmission': energy,
+        'transmission': transmissionRes,
         'omegas': omegas
     }
 

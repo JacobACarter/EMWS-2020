@@ -92,9 +92,9 @@ def isNumZero(num):
     precision = 1e-6
     return (num < precision and num > -precision) or num == 0
 
-
 def organizeEigen(val, vec):
     for i in range(4):
+        # print('vec ', i, vec)
         v = val[i]
         imaginary = (not isNumZero(v.imag)) and (isNumZero(v.real))
         real = (isNumZero(v.imag)) and (not isNumZero(v.real))
@@ -136,6 +136,42 @@ def organizeEigen(val, vec):
     return val, vec
 
 
+# def organizeEigen(val, vec):
+#     orderedVals = np.ndarray(shape = (4), dtype=complex)
+#     orderedVecs = np.ndarray(shape = (4, 4), dtype = complex)
+#     for i in range(4):
+#         v = val[i]
+#         imaginary = (not isNumZero(np.imag(v))) and (isNumZero(np.real(v)))
+#         real = (isNumZero(np.imag(v))) and (not isNumZero(np.real(v)))
+#         if imaginary:
+#             if (v.imag < 0):
+#                 if (DEBUG):
+#                     print('Eigenvalue ' + str(v) + ' is negative imaginary. Swapping to third!')
+#                 orderedVals[2] = val[i]
+#                 print(vec[i])
+#                 orderedVecs[2] = vec[i]
+
+#             else:
+#                 orderedVals[0] = val[i]
+#                 orderedVecs[0] = vec[i]
+#                 print(vec[i])
+
+#         if real:
+
+#             if (np.real(v) > 0):
+#                 orderedVals[3] = val[i].real
+#                 orderedVecs[3] = vec[i]
+#                 print(vec[i])
+
+#             else: 
+#                 orderedVals[1] = val[i]
+#                 orderedVecs[1] = vec[i]
+#                 print(vec[i])
+
+#                 if (DEBUG):
+#                     print('Eigenvalue ' + str(v) + ' is negative real. Swapping to second entry!')
+
+#     return orderedVals, orderedVecs
 
 def organizeEigenForMiddleLayers(val, vec):
     for i in range(4):
@@ -273,7 +309,6 @@ class Structure:
 
     # Calculate the eigenproblem for all layers of the structure
     def calcEig(self):
-
         if (DEBUG):
             print('\nCalculating Eigen Problem')
         for n in range(self.num):
@@ -281,36 +316,24 @@ class Structure:
                 print('For layer ' + str(n+1))
             #start = time.perf_counter()
             eigVal, eigVec = np.linalg.eig(self.maxwell[n])
+            # print(eigVal)
+            # print(eigVec)
             # keep track of the eigenvaqlues 
+            # f = open('eigencheck.txt', 'a')
             if n == 0 or n == self.num - 1:
+                # print('preprocessed', file=f)
+                # print(eigVal, file=f)
+                # print(eigVec, file=f)
                 self.layers[n].eigVal, self.layers[n].eigVec = organizeEigen(eigVal, eigVec)
+                # print('post processed', file=f)
+                # print(self.layers[n].eigVal, file=f)
+                # print(self.layers[n].eigVec, file=f)
             else:
                 self.layers[n].eigVal, self.layers[n].eigVec = organizeEigenForMiddleLayers(eigVal, eigVec)
-            if (DEBUG):
-                Av = np.multiply(self.maxwell[n], np.transpose(eigVec))
-                lambdaV = np.multiply(eigVal, np.transpose(eigVec))
-                print('LAYER ', n)
-                print('Av: ', Av)
-                print('lambda v: ', lambdaV)
-                print('Av = lambda v: ', Av == lambdaV)
-            #eigVal, eigVec = organizeEigen(eigVal, eigVec)
-            #end = time.perf_counter()
-            #print(f'Time to calculate Eigensystem: {end-start:0.5f} seconds')
-            if (DEBUG):
-                print(f'Values:\n{self.layers[n].eigVal}')
-            if (DEBUG):
-                print(f'Vectors:\n{self.layers[n].eigVec}')
-        # print('----------')
-        print('end')
-        print(self.layers[0].eigVal)
-        # print('------------')
-        # print(self.layers[2].eigVal)
-        # print( (0.09943)*(0.09943) + (0.24557)*(0.24557) + (0.89378)*(0.89378) + (0.36189)*(0.36189) )
+            
+            # f.close()
 
-    def structureCheck(self):
-        leftEig = self.layers[0].eigVal
-        print(leftEig[0])
-        print(leftEig[1])
+
 
     # Import preexisting eigendata
     def importEig(self, e_vals, e_vecs):
@@ -638,14 +661,13 @@ class Structure:
         transmisssionSq = np.real(transmitted)**2 + np.imag(transmitted)**2
         reflected = constants[2]
         reflectionSq = np.real(reflected)**2 + np.imag(reflected)**2
-        print('TransmissionSq', transmisssionSq)
-        print('ReflectionSq',reflectionSq)
+
         if isNumZero((transmisssionSq + reflectionSq) - 1): 
             print('Transmitted and Reflected acting correctly')
-            print(transmisssionSq)
+            return np.sqrt(transmisssionSq)
         else: 
             print('Transmission Issues: please check parameters')
-            return transmisssionSq
+            return np.sqrt(transmisssionSq)
 
 
        
@@ -658,46 +680,116 @@ class Structure:
 
 
 # Test code
+# def test():
+#     print('Starting Test:')
+#     size = 3
+#     k1 = 0.5
+#     k2 = 0.03
+#     transVals = []
+#     refVals = []
+#     omegaVals = []
+#     for omega in range(240, 400, 1): 
+#         omega = omega / 1000
+#         s = Structure(size, omega, k1, k2)
+#         e = np.array([[1.5,0,0],
+#                     [0,8,0],
+#                     [0,0,1]])
+#         ee = np.array([[8,0,0],
+#                     [0,1.5,0],
+#                     [0,0,1]])
+#         u = np.array([[4,0,0],
+#                     [0,1,0],
+#                     [0,0,1]])
+#         uu = np.array([[1,0,0],
+#                     [0,4,0],
+#                     [0,0,1]])
+#         s.addLayer('Ambient Left', 7, e, u)
+#         s.addLayer('Layer 1', 7, ee, uu)
+#         s.addLayer('Ambient Right', 7, e, u)
+#         # s.printLayers()
+#         # s.removeLayer(1)
+#         # s.printLayers()
+#         # s.insertLayer('Layer 1', 7, ee, uu, 1)
+#         # s.printLayers()
+#         m = s.buildMatrices()
+#         # s.printMaxwell()
+#         s.calcEig()
+#         s.calcModes()
+#         c1 = 1
+#         c2 = 0
+#         c3 = 0
+#         c4 = 0
+#         const = s.calcConstants(c1,c2,c3,c4)
+#         tr = s.calculateTransmission()
+
+#         # # refVals.append(ref)
+#         omegaVals.append(omega)
+#         transVals.append(tr)
+#     plt.plot(omegaVals, transVals, "b",label = "Transmission:(0.5, 0.03)" )
+#     # plt.plot(omegaVals, refVals, "r",label = "Relection" )
+#     # plt.xticks(omegaVals)
+#     plt.ylim(0, 1)
+#     plt.xlabel('w')
+#     plt.ylabel('T(k, w)')
+#     plt.title('T(k, w) vs. w at L=7')
+#     plt.legend()
+#     plt.show()
+
+    # Test code
 def test():
     print('Starting Test:')
     size = 3
     k1 = 0.5
     k2 = 0.03
-    omega = .287
-    s = Structure(size, omega, k1, k2)
-    e = np.array([[1.5,0,0],
-                [0,8,0],
-                [0,0,1]])
-    ee = np.array([[8,0,0],
-                [0,1.5,0],
-                [0,0,1]])
-    u = np.array([[4,0,0],
-                [0,1,0],
-                [0,0,1]])
-    uu = np.array([[1,0,0],
-                [0,4,0],
-                [0,0,1]])
-    s.addLayer('Ambient Left', 7, e, u)
-    s.addLayer('Layer 1', 7, ee, uu)
-    s.addLayer('Ambient Right', 7, e, u)
-    # s.printLayers()
-    # s.removeLayer(1)
-    # s.printLayers()
-    # s.insertLayer('Layer 1', 7, ee, uu, 1)
-    # s.printLayers()
-    m = s.buildMatrices()
-    # s.printMaxwell()
-    s.calcEig()
-    # s.calcModes()
-    # c1 = 1
-    # c2 = 0
-    # c3 = 0
-    # c4 = 0
-    # const = s.calcConstants(c1,c2,c3,c4)
-    # tr = s.calculateTransmission()
+    transVals = []
+    omegaVals = []
+    omega = 0.240
+    while omega < .400:
+        s = Structure(size, omega, k1, k2)
+        e = np.array([[1.5,0,0],
+                    [0,8,0],
+                    [0,0,1]])
+        ee = np.array([[8,0,0],
+                    [0,1.5,0],
+                    [0,0,1]])
+        u = np.array([[4,0,0],
+                    [0,1,0],
+                    [0,0,1]])
+        uu = np.array([[1,0,0],
+                    [0,4,0],
+                    [0,0,1]])
+        s.addLayer('Ambient Left', 7, e, u)
+        s.addLayer('Layer 1', 7, ee, uu)
+        s.addLayer('Ambient Right', 7, e, u)
+        # s.printLayers()
+        # s.removeLayer(1)
+        # s.printLayers()
+        # s.insertLayer('Layer 1', 7, ee, uu, 1)
+        # s.printLayers()
+        m = s.buildMatrices()
+        # s.printMaxwell()
+        s.calcEig()
+        s.calcModes()
+        c1 = 1
+        c2 = 0
+        c3 = 0
+        c4 = 0
+        const = s.calcConstants(c1,c2,c3,c4)
+        tr = s.calculateTransmission()
 
-
-    
+        # # refVals.append(ref)
+        omegaVals.append(omega)
+        transVals.append(tr)
+        omega += 0.000001
+    plt.plot(omegaVals, transVals, "b",label = "Transmission:(0.5, 0.03)" )
+    # plt.plot(omegaVals, refVals, "r",label = "Relection" )
+    # plt.xticks(omegaVals)
+    plt.ylim(0, 1)
+    plt.xlabel('w')
+    plt.ylabel('T(k, w)')
+    plt.title('T(k, w) vs. w at L=7')
+    plt.legend()
+    plt.show()
 
 
 def main():
