@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {   
+            // Launch Frontend (nothing really to debug, just helpful instead of running from the command line)
+            "name": "Python: Frontend",
+            "type": "python",
+            "request": "launch",
+            "module": "http.server", // python module to launch
+            "cwd": "${workspaceFolder}/frontend", // set the directory to launch from
+            "justMyCode": true  //The debugger displays and steps into user code ("My Code") only, ignoring system code and other code that is optimized or that does not have debugging symbols.
+        },
+        {
+            // Launch/Debug API with Flask in the development/DEBUG mode, can set breakpoints, walk through code, etc
+            "name": "Python: Backend API",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "backend/api/app.py",
+                "FLASK_DEBUG": "1" // sets ENV to "development" which also sets DEBUG to True, see https://flask.palletsprojects.com/en/1.1.x/config/#environment-and-debug-features           
+            },
+            "args": [
+                "run",
+                "--no-debugger",   // I believe this is because we are debugging using VS Code
+                "--no-reload"      // Remove to auto-reload modified pages
+            ],
+            "justMyCode": true
+        },
+        {
+            // Launch/Debug a specific python file, simply open the file in VS Code, run and debug, can set breakpoints, walk through code, etc
+            "name": "Python: Debug File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+    ]
+}

@@ -3,8 +3,6 @@ from flask import request
 from flask import json
 import numpy as np
 from flask_cors import CORS, cross_origin
-import sys
-sys.path.append('/Users/joelkeller/EMWS/EMWS-2020/backend')
 from cloudscattering import Structure as s
 
 # Run server by calling python app.py
@@ -186,7 +184,7 @@ def modes():
         m = encode_maxwell(struct.maxwell[i])
         n = encode_eigen(layer.eigVal.tolist())
         o = encode_evecs(layer.eigVec.tolist())
-        mm = encode_evecs(layer.modes.tolist())
+        mm = encode_evecs(layer.mode.tolist())
 
 
         maxwells.append(m)
