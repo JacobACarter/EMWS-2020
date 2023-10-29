@@ -95,6 +95,7 @@ def isNumZero(num):
 
 def organizeEigen(val, vec):
     for i in range(4):
+        # print('vec ', i, vec)
         v = val[i]
         imaginary = (not isNumZero(v.imag)) and (isNumZero(v.real))
         real = (isNumZero(v.imag)) and (not isNumZero(v.real))
@@ -134,7 +135,6 @@ def organizeEigen(val, vec):
             vec = swapMatrixColumns(vec, 3, 2)
     # vec = swapMatrixColumns(vec, 3, 2)
     return val, vec
-
 
 
 def organizeEigenForMiddleLayers(val, vec):
@@ -627,6 +627,8 @@ class Structure:
 
         return field
     
+
+    
     def calculateTransmission(self):
         layers = self.num
         constants = self.constants
@@ -638,14 +640,13 @@ class Structure:
         transmisssionSq = np.real(transmitted)**2 + np.imag(transmitted)**2
         reflected = constants[2]
         reflectionSq = np.real(reflected)**2 + np.imag(reflected)**2
-        print('TransmissionSq', transmisssionSq)
-        print('ReflectionSq',reflectionSq)
+
         if isNumZero((transmisssionSq + reflectionSq) - 1): 
             print('Transmitted and Reflected acting correctly')
-            print(transmisssionSq)
+            return np.sqrt(transmisssionSq)
         else: 
             print('Transmission Issues: please check parameters')
-            return transmisssionSq
+            return np.sqrt(transmisssionSq)
 
 
        

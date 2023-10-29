@@ -5,6 +5,7 @@ import numpy as np
 from flask_cors import CORS, cross_origin
 from cloudscattering import Structure as s
 
+
 # Run server by calling python app.py
 app = Flask(__name__)
 # List of accepted origins
@@ -442,12 +443,13 @@ def transmission():
     # right now assume 3 layer system
     num = 3
     # # Setup return data
+    transmissionRes = []
+    omegas = []
+
     data = {}
     omega = startOmega
     while omega < endOmega:
 
-        transmissionRes = []
-        omegas = [].append(omega)
 
         struct = s(num, omega, k1, k2)
         for layer in layers:
@@ -526,13 +528,13 @@ def transmission():
 
         transmission = struct.calculateTransmission()
         transmissionRes.append(transmission) 
+        omegas.append(omega)
         omega += interval 
-    
+
     data = {
         'transmission': transmissionRes,
         'omegas': omegas
     }
-
     response = json.jsonify(data)
 
     return response
