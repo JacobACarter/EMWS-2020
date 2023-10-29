@@ -273,39 +273,19 @@ class Structure:
 
     # Calculate the eigenproblem for all layers of the structure
     def calcEig(self):
-
         if (DEBUG):
             print('\nCalculating Eigen Problem')
         for n in range(self.num):
             if (DEBUG):
                 print('For layer ' + str(n+1))
-            #start = time.perf_counter()
             eigVal, eigVec = np.linalg.eig(self.maxwell[n])
-            # keep track of the eigenvaqlues 
+
             if n == 0 or n == self.num - 1:
+
                 self.layers[n].eigVal, self.layers[n].eigVec = organizeEigen(eigVal, eigVec)
             else:
                 self.layers[n].eigVal, self.layers[n].eigVec = organizeEigenForMiddleLayers(eigVal, eigVec)
-            if (DEBUG):
-                Av = np.multiply(self.maxwell[n], np.transpose(eigVec))
-                lambdaV = np.multiply(eigVal, np.transpose(eigVec))
-                print('LAYER ', n)
-                print('Av: ', Av)
-                print('lambda v: ', lambdaV)
-                print('Av = lambda v: ', Av == lambdaV)
-            #eigVal, eigVec = organizeEigen(eigVal, eigVec)
-            #end = time.perf_counter()
-            #print(f'Time to calculate Eigensystem: {end-start:0.5f} seconds')
-            if (DEBUG):
-                print(f'Values:\n{self.layers[n].eigVal}')
-            if (DEBUG):
-                print(f'Vectors:\n{self.layers[n].eigVec}')
-        # print('----------')
-        print('end')
-        print(self.layers[0].eigVal)
-        # print('------------')
-        # print(self.layers[2].eigVal)
-        # print( (0.09943)*(0.09943) + (0.24557)*(0.24557) + (0.89378)*(0.89378) + (0.36189)*(0.36189) )
+
 
     def structureCheck(self):
         leftEig = self.layers[0].eigVal
@@ -391,10 +371,8 @@ class Structure:
             # Next interface is the endpoint of the following layer
             else:
                 interfaces[i] = ifaces[i+1]
-        if(DEBUG):
-            print(interfaces)
-            print(references)
-            print(ifaces)
+
+
         for i in range(I):
             expVecLeft = np.exp((self.layers[i].eigVal * (interfaces[i] - references[i])))
             expVecRight = np.exp((self.layers[i+1].eigVal * (interfaces[i] - references[i+1])))
@@ -406,6 +384,9 @@ class Structure:
             
             leftPsi[i] = np.dot(self.layers[i].eigVec, np.diag(expVecLeft))
             rightPsi[i] = np.dot(self.layers[i+1].eigVec, np.diag(expVecRight))
+
+
+
         if(DEBUG):
             print('leftPsi: ')
             print(leftPsi)
@@ -427,6 +408,7 @@ class Structure:
             print(s[4:8])
             # print(s)
             print("\n")
+
         self.scattering = s
         return s
 
@@ -441,6 +423,8 @@ class Structure:
         for i in range(4*interfaces):
             for j in range(4*interfaces):
                 s[i][j] = scattering[i][j+2]
+
+    
         if(DEBUG):
             print('Condensed Scattering matrix')
             print(s.shape)
@@ -611,6 +595,10 @@ class Structure:
                 Ez.append((e[2][0] * Ex[-1] + e[2][1] * Ey[-1] - k2 * Hx[-1] + k1 *Hy[-1]) / (e[2][2]))
                 Hz.append(- (k2 * Ex[-1] - k1 * Ey[-1] + u[2][0] * Hx[-1] + u[2][1] * Hy[-1]) / (u[2][2]))   
 
+
+
+
+
         field = {
             'z': z_arr,
             'Ex': Ex,
@@ -634,7 +622,7 @@ class Structure:
         constants = self.constants
         mode_1 = self.layers[0].eigVal[0]
         mode_2 = self.layers[0].eigVal[1]
-        
+
 
         transmitted = constants[4*(layers) - 4]
         transmisssionSq = np.real(transmitted)**2 + np.imag(transmitted)**2
@@ -649,10 +637,6 @@ class Structure:
             return np.sqrt(transmisssionSq)
 
 
-       
-        
-        
-
     # The structure string method
     def __str__(self):
         return 'Omega: ' + str(self.omega) + '\n(k1,k2): (' + str(self.k1*self.omega) + ',' + str(self.k2*self.omega) + ')\n'
@@ -664,7 +648,7 @@ def test():
     size = 3
     k1 = 0.5
     k2 = 0.03
-    omega = .287
+    omega = .39280000000000403
     s = Structure(size, omega, k1, k2)
     e = np.array([[1.5,0,0],
                 [0,8,0],
@@ -689,13 +673,13 @@ def test():
     m = s.buildMatrices()
     # s.printMaxwell()
     s.calcEig()
-    # s.calcModes()
-    # c1 = 1
-    # c2 = 0
-    # c3 = 0
-    # c4 = 0
-    # const = s.calcConstants(c1,c2,c3,c4)
-    # tr = s.calculateTransmission()
+    s.calcModes()
+    c1 = 1
+    c2 = 0
+    c3 = 0
+    c4 = 0
+    const = s.calcConstants(c1,c2,c3,c4)
+    tr = s.calculateTransmission()
 
 
     

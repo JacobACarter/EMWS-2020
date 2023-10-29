@@ -4,7 +4,7 @@ from flask import json
 import numpy as np
 from flask_cors import CORS, cross_origin
 from cloudscattering import Structure as s
-
+import matplotlib.pyplot as  plt
 
 # Run server by calling python app.py
 app = Flask(__name__)
@@ -455,81 +455,19 @@ def transmission():
         for layer in layers:
         # build layers
             struct.addLayer(layer['name'], layer['length'], layer['epsilon'], layer['mu'])
+
+        struct.buildMatrices()
+        struct.calcEig()
+        struct.calcModes()
         
-
-        # should not be any maxwell, eig data
-        maxwell_matrices = None
-        eigenvalues = None
-        eigenvectors = None
-        
-        try:
-                maxwell_matrices = req['maxwell_matrices']
-        except Exception:
-            pass
-                #print('\nFailed to load maxwell. Will calculate data')
-        try:
-            eigenvalues = req['eigenvalues']
-            eigenvectors = req['eigenvectors']
-        except Exception:
-            pass
-            #print('\nFailed to load eigen system. Will calculate data')
-
-
-        # Handle maxwells
-        if maxwell_matrices == None:
-            struct.buildMatrices()
-            maxwells = []
-            for maxwell in struct.maxwell:
-                m = encode_maxwell(maxwell)
-                maxwells.append(m)
-            data['maxwell_matrices'] = maxwells
-        else:
-            maxwells = []
-            for maxwell in maxwell_matrices:
-                maxwells.append(decode_maxwell(maxwell))
-            struct.importMatrices(maxwells)
-
-        #Handle eigendata
-        if eigenvalues == None or eigenvectors == None:
-            struct.calcEig()
-            struct.calcModes()
-            e_vals = []
-            e_vecs = []
-            i = 0
-            for layer in struct.layers:
-                n = encode_eigen(layer.eigVal.tolist())
-                o = encode_evecs(layer.eigVec.tolist())
-
-                e_vals.append(n)
-                e_vecs.append(o)
-                i += 1
-            data['eigenvalues'] = e_vals
-            data['eigenvectors'] = e_vecs
-        else:
-            e_vals = []
-            e_vecs = []
-            for vals in eigenvalues:
-                e_vals.append(decode_eigen(vals))
-            for vecs in eigenvectors:
-                e_vecs.append(decode_evecs(vecs))
-            struct.importEig(e_vals, e_vecs)
-            struct.calcModes()
-
-        incoming = None
-        try:
-            incoming = decode_eigen(req['incoming'])
-        except Exception:
-            print('\nDid not find incoming constants! Using defaults...')
-            incoming = [1, 0, 0, 0]
-
-
-        struct.calcScattering()
-        struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
+        const = struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
 
         transmission = struct.calculateTransmission()
         transmissionRes.append(transmission) 
         omegas.append(omega)
+
         omega += interval 
+
 
     data = {
         'transmission': transmissionRes,
