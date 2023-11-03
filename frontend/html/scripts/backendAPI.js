@@ -507,11 +507,11 @@ class Structure {
   /** Determines the transmission by calling upon the API */
   async determineTransmission(wLeft, wRight, wPoints) {
     var data = {
-      wLeft: Number(wLeft), // needs UI element
-      wRight: Number(wRight), // needs UI element
+      wLeft: Number(wLeft),
+      wRight: Number(wRight),
       k1: this.k1,
       k2: this.k2,
-      points: Number(wPoints), // needs UI element
+      points: Number(wPoints),
       layers: convertJSLayersToPythonLayers(this.layers),
       incoming: this.incoming
     }, res
