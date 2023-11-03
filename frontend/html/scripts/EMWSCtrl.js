@@ -1042,11 +1042,8 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     getArrays();
     await updateAll();
 
-    console.time("Backend Time for Transmission")
-    await $scope.structure.determineTransmission($scope.wLeft, $scope.wRight, $scope.wPoints)
-    console.timeEnd("Backend Time for Transmission")
+    await createTransmissionChart();
 
-    createTransmissionChart();
     setTimeout(() => {
       $scope.expRunning = false;
       $scope.$apply();
@@ -1055,58 +1052,29 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   }
 
   /** Creates the chart in the Transmissions tab. WIP */
-  function createTransmissionChart() {
-    //var kZsList = [1, 2, 3];
-    // var kZs = document.getElementById("kzList").value;
-    // for(var i = 0; i < kZs.length; i++) {
-    //  console.log(kZs.charAt(i));
-    //  if(isNumeric(kZs.charAt(i))) {
-    //    var str = ""+kZs.charAt(i);
-    //    kZsList.push(parseInt(str));
-    //  }
-    // }
+  async function createTransmissionChart() {
     var divName = "transmissionView";
-    //console.log(kZsList);
-    console.time("Transmission Graph");
-    var transmission = emScattering3.createTransmissionArrays($scope.eArray, $scope.muArray, $scope.lArray, $scope.NumLayers, $scope.k1, $scope.k2, $scope.incoming, $scope.wLeft, $scope.wRight, $scope.wPoints, $scope.zPoint);        //Method needs to be created in emScattering3!
-    console.timeEnd("Transmission Graph");
-    console.log(transmission);
+    console.time("Backend Time for Transmission")
+    const result = await $scope.structure.determineTransmission($scope.wLeft, $scope.wRight, $scope.wPoints)
+    console.timeEnd("Backend Time for Transmission")
+    console.log(result);
+  
+    if(!result) {
+      return
+    }
+
     var data = new google.visualization.DataTable();
-    data.addColumn('number', 'omega');                          //Adds Omega column to data table
-    data.addColumn('number', 'c');                              //Adds const transmission to data table
-    /*
-    data.addColumn('number', $scope.EX);                        //Adds Ex column to data table
-    data.addColumn('number', $scope.EY);                        //Adds Ey column to data table
-    data.addColumn('number', $scope.HX);                        //Adds Hx column to data table
-    data.addColumn('number', $scope.HY);                        //Adds Hy column to data table
-    */
-
-    /*
-    for (var i = 0; i < transmissionGraph.kzList.length; i++) {
-        data.addColumn('number', 'kz' + transmissionGraph.kzList[i]);
-    }
-    var dataArray = new Array(transmissionGraph.omegaRange.length);
-    for (var i = 0; i < dataArray.length; i++) {
-        dataArray[i] = new Array(transmissionGraph.kzList.length);
-    }
-
-    for (var i = 0; i < transmissionGraph.omegaRange.length; i++) {
-        dataArray[i][0] = transmissionGraph.omegaRange[i];
-        for (var j = 1; j <= transmissionGraph.kzList.length; j++) {
-            dataArray[i][j] = transmissionGraph.transmissionCoeffArrays[j - 1][i];
-        }
-    }
-    */
-
-
+    data.addColumn('number', 'ω');                          //Adds ω column to data table
+    data.addColumn('number', 'T(k,ω)');                     //Adds transmission to data table
+  
     for (var i = 0; i < $scope.wPoints; i++) {
       data.addRows([
-        [transmission.omegas[i], transmission.cArr[i] /*transmission.Ex[i], transmission.Ey[i], transmission.Hx[i], transmission.Hy[i]*/]
+        [result.omegas[i], result.transmission[i] ]
       ]);
     }
     var options = {
       chart: {
-        title: 'transmission graph'
+        title: 'T(k, ω) vs. ω'
       },
       chartArea: {
         left: 40,
@@ -1129,7 +1097,6 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     var chart = new google.visualization.LineChart(document.getElementById(divName));
 
     chart.draw(data, options);
-    //console.log(dataArray[0][1]);
 
     var myElements = document.querySelectorAll(".hiddenChart1");
     for (var i = 0; i < myElements.length; i++) {

@@ -526,5 +526,6 @@ class Structure {
       return
     }
     console.log("determineTransmission res", res)
+    return res;
   }
 }
