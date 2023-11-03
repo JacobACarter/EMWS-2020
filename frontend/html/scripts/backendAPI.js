@@ -503,4 +503,28 @@ class Structure {
   getField() {
     return this.field ? this.field : null
   }
+
+  /** Determines the transmission by calling upon the API */
+  async determineTransmission(wLeft, wRight, wPoints) {
+    var data = {
+      wLeft: Number(wLeft), // needs UI element
+      wRight: Number(wRight), // needs UI element
+      k1: this.k1,
+      k2: this.k2,
+      points: Number(wPoints), // needs UI element
+      layers: convertJSLayersToPythonLayers(this.layers),
+      incoming: this.incoming
+    }, res
+
+    console.log("determineTransmission data", data)
+
+    try {
+      res = await request("structure/transmission", data, "POST")
+    } catch(e) {
+      console.error(e)
+      console.log("Failed to get transmission!")
+      return
+    }
+    console.log("determineTransmission res", res)
+  }
 }

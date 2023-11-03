@@ -1037,13 +1037,21 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   }
 
   /** Runs the experiment in the Transmissions tab. WIP */
-  $scope.runTransmissionExp = function () {
+  $scope.runTransmissionExp = async function () {
     $scope.expRunning = true;
     getArrays();
-    updateAll();
+    await updateAll();
+
+    console.time("Backend Time for Transmission")
+    await $scope.structure.determineTransmission($scope.wLeft, $scope.wRight, $scope.wPoints)
+    console.timeEnd("Backend Time for Transmission")
 
     createTransmissionChart();
-    $scope.expRunning = false;
+    setTimeout(() => {
+      $scope.expRunning = false;
+      $scope.$apply();
+      console.log("Finished running experiment...");
+    }, 250);
   }
 
   /** Creates the chart in the Transmissions tab. WIP */
