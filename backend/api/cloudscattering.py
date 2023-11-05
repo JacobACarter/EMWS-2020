@@ -92,6 +92,15 @@ def isNumZero(num):
     precision = 1e-6
     return (num < precision and num > -precision) or num == 0
 
+def onlyEigenValsImaginary(val, eigValsImaginaryNegative, eigValsImaginaryPositive):
+    for i in range(4):
+        v = val[i]
+        imaginary = (not isNumZero(v.imag)) and (isNumZero(v.real))
+        if imaginary:
+            if(v.imag < 0):
+                eigValsImaginaryNegative.append(v.imag)
+            else :
+                eigValsImaginaryPositive.append(v.imag)
 
 def organizeEigen(val, vec):
     for i in range(4):
@@ -286,6 +295,8 @@ class Structure:
             else:
                 self.layers[n].eigVal, self.layers[n].eigVec = organizeEigenForMiddleLayers(eigVal, eigVec)
 
+    def eigValsOnlyImaginary(self,n,eigValsImaginaryNegative, eigValsImaginaryPositive):
+        return onlyEigenValsImaginary(self.layers[n].eigVal, eigValsImaginaryNegative, eigValsImaginaryPositive)
 
     def structureCheck(self):
         leftEig = self.layers[0].eigVal

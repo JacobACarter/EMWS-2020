@@ -101,9 +101,9 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     await updateAll();
     google.charts.setOnLoadCallback(createStructureChart);
     google.charts.setOnLoadCallback(createFieldChart);
-    google.charts.setOnLoadCallback(createTransmissionChart)
+    google.charts.setOnLoadCallback(createTransmissionCharts)
     //google.charts.setOnLoadCallback(createDispersionChart);
-    //google.charts.setOnLoadCallback(createTransmissionChart);
+    //google.charts.setOnLoadCallback(createTransmissionCharts);
     createAnim();
     //printDispersionChart("dispView", "100%", "100%");
 
@@ -1042,7 +1042,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     getArrays();
     await updateAll();
 
-    await createTransmissionChart();
+    await createTransmissionCharts();
 
     setTimeout(() => {
       $scope.expRunning = false;
@@ -1052,8 +1052,7 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
   }
 
   /** Creates the chart in the Transmissions tab. WIP */
-  async function createTransmissionChart() {
-    var divName = "transmissionView";
+  async function createTransmissionCharts() {
     console.time("Backend Time for Transmission")
     const result = await $scope.structure.determineTransmission($scope.wLeft, $scope.wRight, $scope.wPoints)
     console.timeEnd("Backend Time for Transmission")
@@ -1062,14 +1061,24 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     if(!result) {
       return
     }
+    createTransmissionChart(result.omegas, result.transmission)
+    createTransmissionChartDispersion(result.omegas, result.imaginaryEigenValues.imNeg, result.imaginaryEigenValues.imPos)
+    
+    var myElements = document.querySelectorAll(".hiddenChart1");
+    for (var i = 0; i < myElements.length; i++) {
+      myElements[i].style.opacity = 1;
+    }
+  }
 
+  async function createTransmissionChart(omegas, transmissions) {
+    var divName = "transmissionView";
     var data = new google.visualization.DataTable();
     data.addColumn('number', 'ω');                          //Adds ω column to data table
     data.addColumn('number', 'T(k,ω)');                     //Adds transmission to data table
   
     for (var i = 0; i < $scope.wPoints; i++) {
       data.addRows([
-        [result.omegas[i], result.transmission[i] ]
+        [omegas[i], transmissions[i] ]
       ]);
     }
     var options = {
@@ -1097,11 +1106,45 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     var chart = new google.visualization.LineChart(document.getElementById(divName));
 
     chart.draw(data, options);
+  }
 
-    var myElements = document.querySelectorAll(".hiddenChart1");
-    for (var i = 0; i < myElements.length; i++) {
-      myElements[i].style.opacity = 1;
+  async function createTransmissionChartDispersion(omegas, negk, posk) {
+    var divName = "dispersionView";
+    var data = new google.visualization.DataTable();
+    data.addColumn('number', 'ω');                          //Adds ω column to data table
+    data.addColumn('number', 'negk(ω)');                     //Adds negk column to data table
+    data.addColumn('number', 'posk(ω)');                     //Adds posk column to data table
+  
+    for (var i = 0; i < $scope.wPoints; i++) {
+      data.addRows([
+        [omegas[i], negk[i], posk[i]]
+      ]);
     }
+    var options = {
+      chart: {
+        title: 'Dispersion relation: k vs ω'
+      },
+      chartArea: {
+        left: 40,
+        top: 5
+      },
+      hAxis: {
+        gridlines: {
+          color: 'transparent',
+          count: 10
+        }
+      },
+      vAxis: {
+        viewWindowMode: 'maximized'
+      },
+      width: '100%',
+      height: '100%',
+      colors: ["blue", "green", "red", "orange"]
+    };
+
+    var chart = new google.visualization.LineChart(document.getElementById(divName));
+
+    chart.draw(data, options);
   }
 
   // function _createAnim_DEPRECATED() {
