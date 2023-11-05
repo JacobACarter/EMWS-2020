@@ -446,6 +446,9 @@ def transmission():
     transmissionRes = []
     omegas = []
 
+    eigValsImaginaryNegative = []
+    eigValsImaginaryPositive = []
+
     data = {}
     omega = startOmega
     while omega < endOmega:
@@ -462,6 +465,12 @@ def transmission():
         
         const = struct.calcConstants(incoming[0], incoming[1], incoming[2], incoming[3])
 
+        for n in range(len(layers)):
+            if( n == 0 ) :
+                print('For layer ' + str(n+1))
+                print(struct.layers[n].eigVal)
+                struct.eigValsOnlyImaginary(n,eigValsImaginaryNegative,eigValsImaginaryPositive)
+
         transmission = struct.calculateTransmission()
         transmissionRes.append(transmission) 
         omegas.append(omega)
@@ -470,6 +479,10 @@ def transmission():
 
 
     data = {
+        'imaginaryEigenValues': {
+            'imNeg': eigValsImaginaryNegative,
+            'imPos': eigValsImaginaryPositive
+        },
         'transmission': transmissionRes,
         'omegas': omegas
     }
