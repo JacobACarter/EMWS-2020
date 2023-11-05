@@ -511,15 +511,18 @@ angular.module('myApp', []).controller('EMWSCtrl', function ($scope) {
     console.log(eigenvalues ? "found eigenvalues for modes" : "no eigenvalues for modes :(")
 
     for (let i = 0; i < 4; i++) {
-      $scope.modesBack[i] = math.complex(
+      // Note: k3 is what we want to display, we need to multiply the eigenvalues
+      // by -i in order to get the back/forward modes which represent the possible
+      // k3 values
+      $scope.modesBack[i] = math.multiply(math.complex(
         parseFloat(eigenvalues[lastSys][i].re).toFixed(4),
         parseFloat(eigenvalues[lastSys][i].im).toFixed(4)
-      );
+      ), math.complex("-i"));
 
-      $scope.modesForward[i] = math.complex(
+      $scope.modesForward[i] = math.multiply(math.complex(
         parseFloat(eigenvalues[0][i].re).toFixed(4),
         parseFloat(eigenvalues[0][i].im).toFixed(4)
-      );
+      ), math.complex("-i"));
     }
   }
 

@@ -294,7 +294,7 @@
             <div class="box">
                 <div class="box-header">
                     <h3>Define Layered Structure</h3>
-                    <small>Enter number of layers and length, electric tensors, and magnetic tensors for each layer.</small>
+                    <small>Enter number of layers and length, electric permittivity tensors, and magnetic permeability tensors for each layer.</small>
                 </div>
                 <div class="box-divider m-a-0"></div>
                 <div class="box-body">
@@ -569,13 +569,13 @@
                 <div class="col-6">
                     <div class="box-header">
                         <h3>Incoming Modes in Ambient Medium</h3>
-                        <!--<small>Calculate perpendicular wave vectors in the left and right ambient media.</small>-->
+                        <small>The normal component k<sub>3</sub> of the wave vector in the ambient medium. The output will be 4 possibilities to choose from.</small>
                     </div>
                     <div class="box-divider m-a-0"></div>
                     <div class="box-body " id="">
                         <div style="padding-left:25px;float:left;margin-bottom: 10px">
                             <h6 style="margin-bottom: 0rem">Incoming Modes on the Left</h6>
-                            <small style="display:block;opacity:0.6;margin-top:2px;margin-bottom:4px;">Check two rightward (incoming) modes in the left ambient medium.</small> 
+                            <small style="display:block;opacity:0.6;margin-top:2px;margin-bottom:4px;">Check two rightward (incoming) modes in the left ambient medium, i.e. choose the positive and positive imaginary numbers.</small> 
                             <!--<p> {{mBack1}} </p>
                             <p> {{mBack2}} </p>-->
                             <div class="form-group row" style="margin-left:0rem">
@@ -603,7 +603,7 @@
                         </div>
                         <div style="clear:both;padding-left:25px;float:left;">
                             <h6 style="margin-bottom: 0rem">Incoming Modes on the Right</h6>
-                            <small style="display:block;opacity:0.6;margin-top:2px;margin-bottom:4px;">Check two leftward (incoming) modes in the right ambient medium.</small> 
+                            <small style="display:block;opacity:0.6;margin-top:2px;margin-bottom:4px;">Check two leftward (incoming) modes in the right ambient medium, i.e. choose the negative and negative imaginary numbers.</small> 
                             <!--<p> {{mFor1}} </p>
                             <p> {{mFor2}} </p>-->
                             <div class="form-group row" style="margin-left:0rem">
@@ -758,7 +758,6 @@
 <div class="padding p4" style="visibility: hidden; position: absolute; left: 0px; top: 0px;">
     <div class="margin">
         <h5 class="mb-0 _300">Transmission Experiment</h5>
-        <small class="text-muted">WIP</small>
     </div>
 
     <div class="row">
@@ -827,75 +826,6 @@
             </div>
     	</div>
       <div >
-    	<div class= "col-lg-4">
-    		<div class="row no-gutter box bg">
-                <div class="col-12">
-                    <div class="box-header">
-                        <h3>Incoming Modes in Ambient Medium</h3>
-                        <!--<small>Calculate perpendicular wave vectors in the left and right ambient media.</small>-->
-                    </div>
-                    <div class="box-divider m-a-0"></div>
-                    <div class="box-body " id="">
-                        <div style="padding-left:25px;float:left;margin-bottom: 10px">
-                            <h6 style="margin-bottom: 0rem">Incoming Modes on the Left</h6>
-                            <small style="display:block;opacity:0.6;margin-top:2px;margin-bottom:4px;">Check two rightward (incoming) modes in the left ambient medium.</small> 
-                            <!--<p> {{mBack1}} </p>
-                            <p> {{mBack2}} </p>-->
-                            <div class="form-group row" style="margin-left:0rem">
-                                <label class="checkboxCont">{{modesBack[0]}}
-                                    <input type="checkbox" ng-model="checkTB1" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(0, true, false, checkTB1)" id="backModeChkT1">
-                                    <span class="checkmark"></span>
-                                </label>
-
-                                <label class="checkboxCont">{{modesBack[1]}}
-                                    <input type="checkbox" ng-model="checkTB2" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(1, true, false, checkTB2)" id="backModeChkT2">
-                                    <span class="checkmark"></span>
-                                </label>
-
-                                <label class="checkboxCont">{{modesBack[2]}}
-                                    <input type="checkbox" ng-model="checkTB3" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(2, true, false, checkTB3)" id="backModeChkT3">
-                                    <span class="checkmark"></span>
-                                </label>
-
-                                <label class="checkboxCont">{{modesBack[3]}}
-                                    <input type="checkbox" ng-model="checkTB4" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(3, true, false, checkTB4)" id="backModeChkT4">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
-                             <!-- place procedural layer forms here --> 
-                        </div>
-                        <div style="clear:both;padding-left:25px;float:left;">
-                            <h6 style="margin-bottom: 0rem">Incoming Modes on the Right</h6>
-                            <small style="display:block;opacity:0.6;margin-top:2px;margin-bottom:4px;">Check two leftward (incoming) modes in the right ambient medium.</small> 
-                            <!--<p> {{mFor1}} </p>
-                            <p> {{mFor2}} </p>-->
-                            <div class="form-group row" style="margin-left:0rem">
-                                <label class="checkboxCont">{{modesForward[0]}}
-                                    <input type="checkbox" ng-model="checkTF1" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(0, false, false, checkTF1)" id="forModeChkT1">
-                                    <span class="checkmark"></span>
-                                </label>
-
-                                <label class="checkboxCont">{{modesForward[1]}}
-                                    <input type="checkbox" ng-model="checkTF2" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(1, false, false, checkTF2)" id="forModeChkT2">
-                                    <span class="checkmark"></span>
-                                </label>
-
-                                <label class="checkboxCont">{{modesForward[2]}}
-                                    <input type="checkbox" ng-model="checkTF3" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(2, false, false, checkTF3)" id="forModeChkT3">
-                                    <span class="checkmark"></span>
-                                </label>
-
-                                <label class="checkboxCont">{{modesForward[3]}}
-                                    <input type="checkbox" ng-model="checkTF4" ng-true-value="true" ng-false-value="false" ng-change="checkBoxes(3, false, false, checkTF4)" id="forModeChkT4">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
-                             <!-- place procedural layer forms here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="col-lg-4">
             <div class="box">
                 <div class="pace pace-active" ng-show="expRunning==true">
